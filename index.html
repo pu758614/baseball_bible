@@ -16,11 +16,11 @@
         <div class="scoreboard">
             <div class="team-score">
                 <div class="team">
-                    <h2>攻擊隊</h2>
+                    <h2 id="team1-name-display">攻擊隊</h2>
                     <div id="team1-score" class="score">0</div>
                 </div>
                 <div class="team">
-                    <h2>守備隊</h2>
+                    <h2 id="team2-name-display">守備隊</h2>
                     <div id="team2-score" class="score">0</div>
                 </div>
             </div>
@@ -86,6 +86,14 @@
             <h2>遊戲設定</h2>
             <div class="settings-form">
                 <div class="setting-item">
+                    <label for="team1-name">攻擊隊名稱:</label>
+                    <input type="text" id="team1-name" placeholder="請輸入第一隊名稱" maxlength="20">
+                </div>
+                <div class="setting-item">
+                    <label for="team2-name">守備隊名稱:</label>
+                    <input type="text" id="team2-name" placeholder="請輸入第二隊名稱" maxlength="20">
+                </div>
+                <div class="setting-item">
                     <label for="innings-setting">局數設定:</label>
                     <select id="innings-setting">
                         <option value="3">3局</option>
@@ -106,8 +114,8 @@
             <h2>遊戲結束</h2>
             <div id="winner-display"></div>
             <div class="final-score">
-                <p>攻擊隊: <span id="final-score-team1">0</span></p>
-                <p>守備隊: <span id="final-score-team2">0</span></p>
+                <p><span id="final-team1-name">攻擊隊</span>: <span id="final-score-team1">0</span></p>
+                <p><span id="final-team2-name">守備隊</span>: <span id="final-score-team2">0</span></p>
             </div>
             <div class="buttons">
                 <button id="new-game" class="action-button">新遊戲</button>
@@ -122,8 +130,8 @@
             <div class="game-status">
                 <p>有一個進行中的遊戲：</p>
                 <p>局數：<span id="saved-inning">0</span>/<span id="saved-total-innings">0</span></p>
-                <p>攻擊隊：<span id="saved-team1-score">0</span> 分</p>
-                <p>守備隊：<span id="saved-team2-score">0</span> 分</p>
+                <p><span id="saved-team1-name">攻擊隊</span>：<span id="saved-team1-score">0</span> 分</p>
+                <p><span id="saved-team2-name">守備隊</span>：<span id="saved-team2-score">0</span> 分</p>
                 <p>現在攻擊：<span id="saved-current-team">攻擊隊</span></p>
             </div>
             <div class="buttons">

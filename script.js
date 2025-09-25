@@ -2,6 +2,11 @@
 
 // 遊戲狀態
 const gameState = {
+    // 隊伍名稱
+    teamNames: {
+        team1: "攻擊隊",
+        team2: "守備隊"
+    },
     // 隊伍分數
     scores: {
         team1: 0,
@@ -94,6 +99,9 @@ const gameState = {
 
 // DOM 元素
 const elements = {
+    // 隊伍名稱顯示
+    team1NameDisplay: document.getElementById('team1-name-display'),
+    team2NameDisplay: document.getElementById('team2-name-display'),
     team1Score: document.getElementById('team1-score'),
     team2Score: document.getElementById('team2-score'),
     currentInning: document.getElementById('current-inning'),
@@ -130,12 +138,16 @@ const elements = {
     gameOverModal: document.getElementById('game-over-modal'),
     continueGameModal: document.getElementById('continue-game-modal'),
     winnerDisplay: document.getElementById('winner-display'),
+    finalTeam1Name: document.getElementById('final-team1-name'),
+    finalTeam2Name: document.getElementById('final-team2-name'),
     finalScoreTeam1: document.getElementById('final-score-team1'),
     finalScoreTeam2: document.getElementById('final-score-team2'),
 
     // 已保存遊戲資訊
     savedInning: document.getElementById('saved-inning'),
     savedTotalInnings: document.getElementById('saved-total-innings'),
+    savedTeam1Name: document.getElementById('saved-team1-name'),
+    savedTeam2Name: document.getElementById('saved-team2-name'),
     savedTeam1Score: document.getElementById('saved-team1-score'),
     savedTeam2Score: document.getElementById('saved-team2-score'),
     savedCurrentTeam: document.getElementById('saved-current-team'),
@@ -145,6 +157,8 @@ const elements = {
     startNewGameButton: document.getElementById('start-new-game'),
 
     // 設定
+    team1NameInput: document.getElementById('team1-name'),
+    team2NameInput: document.getElementById('team2-name'),
     inningsSetting: document.getElementById('innings-setting'),
     startGameButton: document.getElementById('start-game'),
     newGameButton: document.getElementById('new-game')
@@ -188,6 +202,7 @@ function initGame() {
 
 // 重置遊戲狀態
 function resetGameState() {
+    gameState.teamNames = { team1: "攻擊隊", team2: "守備隊" };
     gameState.scores.team1 = 0;
     gameState.scores.team2 = 0;
     gameState.currentInning = 1;
@@ -195,10 +210,18 @@ function resetGameState() {
     gameState.currentTeam = 1;
     gameState.bases = { first: false, second: false, third: false };
     gameState.inProgress = false;
+
+    // 清空輸入框
+    if (elements.team1NameInput) elements.team1NameInput.value = "";
+    if (elements.team2NameInput) elements.team2NameInput.value = "";
 }
 
 // 更新UI
 function updateUI() {
+    // 更新隊伍名稱
+    elements.team1NameDisplay.textContent = gameState.teamNames.team1;
+    elements.team2NameDisplay.textContent = gameState.teamNames.team2;
+
     // 更新分數
     elements.team1Score.textContent = gameState.scores.team1;
     elements.team2Score.textContent = gameState.scores.team2;
@@ -211,7 +234,8 @@ function updateUI() {
     elements.outsCount.textContent = gameState.outs;
 
     // 更新當前攻擊隊
-    elements.battingTeam.textContent = gameState.currentTeam === 1 ? '攻擊隊' : '守備隊';
+    elements.battingTeam.textContent = gameState.currentTeam === 1 ?
+        gameState.teamNames.team1 : gameState.teamNames.team2;
 
     // 更新壘包
     updateBases();
@@ -262,6 +286,7 @@ function setupEventListeners() {
             const parsedState = JSON.parse(savedState);
 
             // 直接恢復狀態
+            gameState.teamNames = parsedState.teamNames || { team1: "攻擊隊", team2: "守備隊" };
             gameState.scores = parsedState.scores;
             gameState.currentInning = parsedState.currentInning;
             gameState.totalInnings = parsedState.totalInnings;
@@ -272,6 +297,12 @@ function setupEventListeners() {
 
             // 設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
+
+            // 填充隊伍名稱輸入欄位
+            if (elements.team1NameInput && elements.team2NameInput) {
+                elements.team1NameInput.value = gameState.teamNames.team1;
+                elements.team2NameInput.value = gameState.teamNames.team2;
+            }
 
             // 關鍵步驟：確保遊戲狀態為進行中
             gameState.inProgress = true;
@@ -300,6 +331,13 @@ function setupEventListeners() {
 function startGame() {
     // 從設定中獲取值
     gameState.totalInnings = parseInt(elements.inningsSetting.value);
+
+    // 獲取隊伍名稱（若未輸入則使用預設值）
+    let team1Name = elements.team1NameInput.value.trim();
+    let team2Name = elements.team2NameInput.value.trim();
+
+    gameState.teamNames.team1 = team1Name || "攻擊隊";
+    gameState.teamNames.team2 = team2Name || "守備隊";
 
     // 更新UI
     elements.totalInnings.textContent = gameState.totalInnings;
@@ -542,9 +580,9 @@ function addScore() {
 
 // 顯示得分特效
 function showScoreEffect(team, points) {
-    // 設置特效文字
-    const teamName = team === 1 ? '攻擊隊' : '守備隊';
-    elements.scoreEffectText.textContent = `得${points}分!`;
+    // 設置特效文字 - 使用自定義隊伍名稱
+    const teamName = team === 1 ? gameState.teamNames.team1 : gameState.teamNames.team2;
+    elements.scoreEffectText.textContent = `恭喜 ${teamName} 得${points}分!`;
 
     // 顯示特效元素
     elements.scoreEffect.style.display = 'block';
@@ -560,7 +598,7 @@ function showScoreEffect(team, points) {
     // 重置動畫
     elements.scoreEffect.style.animation = 'none';
     elements.scoreEffect.offsetHeight; // 觸發重排，使動畫能夠重新開始
-    elements.scoreEffect.style.animation = 'scoreEffect 1.5s ease-in-out'; // 更新為 1.5 秒
+    elements.scoreEffect.style.animation = 'scoreEffect 3s ease-in-out'; // 更新為 3 秒
 }
 
 // 切換隊伍
@@ -593,15 +631,19 @@ function endGame() {
     // 設置遊戲狀態為非進行中
     gameState.inProgress = false;
 
+    // 更新隊伍名稱
+    elements.finalTeam1Name.textContent = gameState.teamNames.team1;
+    elements.finalTeam2Name.textContent = gameState.teamNames.team2;
+
     // 更新最終分數
     elements.finalScoreTeam1.textContent = gameState.scores.team1;
     elements.finalScoreTeam2.textContent = gameState.scores.team2;
 
     // 顯示贏家
     if (gameState.scores.team1 > gameState.scores.team2) {
-        elements.winnerDisplay.textContent = '攻擊隊獲勝！';
+        elements.winnerDisplay.textContent = `${gameState.teamNames.team1}獲勝！`;
     } else if (gameState.scores.team1 < gameState.scores.team2) {
-        elements.winnerDisplay.textContent = '守備隊獲勝！';
+        elements.winnerDisplay.textContent = `${gameState.teamNames.team2}獲勝！`;
     } else {
         elements.winnerDisplay.textContent = '平局！';
     }
@@ -617,6 +659,7 @@ function endGame() {
 function saveGameState() {
     // 創建要保存的狀態對象
     const stateToSave = {
+        teamNames: gameState.teamNames,
         scores: gameState.scores,
         currentInning: gameState.currentInning,
         totalInnings: gameState.totalInnings,
@@ -642,6 +685,8 @@ function loadGameState() {
 
         // 僅在遊戲進行中時才恢復狀態
         if (parsedState.inProgress) {
+            // 恢復隊伍名稱
+            gameState.teamNames = parsedState.teamNames || { team1: "攻擊隊", team2: "守備隊" };
             gameState.scores = parsedState.scores;
             gameState.currentInning = parsedState.currentInning;
             gameState.totalInnings = parsedState.totalInnings;
@@ -653,6 +698,12 @@ function loadGameState() {
 
             // 設置設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
+
+            // 如果有隊伍名稱，填充輸入欄位
+            if (gameState.teamNames) {
+                elements.team1NameInput.value = gameState.teamNames.team1;
+                elements.team2NameInput.value = gameState.teamNames.team2;
+            }
 
             // 確保設定對話框不顯示
             elements.settingsModal.style.display = 'none';
@@ -668,11 +719,19 @@ function loadGameState() {
 
 // 更新繼續遊戲對話框中的資訊
 function updateContinueGameDialog(savedState) {
+    // 使用保存的隊伍名稱（如果有）
+    const teamNames = savedState.teamNames || { team1: "攻擊隊", team2: "守備隊" };
+
+    // 更新顯示
+    if (elements.savedTeam1Name) elements.savedTeam1Name.textContent = teamNames.team1;
+    if (elements.savedTeam2Name) elements.savedTeam2Name.textContent = teamNames.team2;
+
     elements.savedInning.textContent = savedState.currentInning;
     elements.savedTotalInnings.textContent = savedState.totalInnings;
     elements.savedTeam1Score.textContent = savedState.scores.team1;
     elements.savedTeam2Score.textContent = savedState.scores.team2;
-    elements.savedCurrentTeam.textContent = savedState.currentTeam === 1 ? '攻擊隊' : '守備隊';
+    elements.savedCurrentTeam.textContent = savedState.currentTeam === 1 ?
+        teamNames.team1 : teamNames.team2;
 }
 
 // 頁面載入時初始化遊戲
