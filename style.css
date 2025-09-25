@@ -1,0 +1,313 @@
+/* 全局樣式 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: '微軟正黑體', Arial, sans-serif;
+}
+
+body {
+    background-color: #f0f8ff;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #1a3a70;
+}
+
+.game-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 分數板樣式 */
+.scoreboard {
+    background-color: #1a3a70;
+    color: white;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.team-score {
+    display: flex;
+    gap: 40px;
+}
+
+.team {
+    text-align: center;
+}
+
+.score {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* 棒球場樣式 */
+.baseball-field {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    background-color: #8bc34a;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-plate {
+    position: absolute;
+    bottom: 30px;
+    width: 25px;
+    height: 25px;
+    background-color: white;
+    transform: rotate(45deg);
+}
+
+.base {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border: 1px solid #666;
+}
+
+#first-base {
+    right: 80px;
+    top: 150px;
+}
+
+#second-base {
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#third-base {
+    left: 80px;
+    top: 150px;
+}
+
+/* 跑者樣式 */
+.runner {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: red;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+#runner-home {
+    bottom: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#runner-first {
+    right: 65px;
+    top: 150px;
+}
+
+#runner-second {
+    top: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#runner-third {
+    left: 65px;
+    top: 150px;
+}
+
+/* 題目區域樣式 */
+.question-area {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f7f9fc;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.question-type {
+    font-weight: bold;
+    color: #1a3a70;
+    margin-bottom: 15px;
+    font-size: 1.6rem;
+    text-align: center;
+}
+
+.question-text {
+    min-height: 100px;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 5px;
+    border: 1px solid #eee;
+    line-height: 1.5;
+}
+
+.timer {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #e74c3c;
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+/* 按鈕樣式 */
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.action-button {
+    padding: 15px 30px;
+    font-size: 1.3rem;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.action-button:hover {
+    background-color: #3498db;
+}
+
+.result-button {
+    padding: 12px 25px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.correct {
+    background-color: #27ae60;
+    color: white;
+}
+
+.correct:hover {
+    background-color: #2ecc71;
+}
+
+.wrong {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.wrong:hover {
+    background-color: #f44336;
+}
+
+/* 模態對話框樣式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.settings-form {
+    margin-top: 20px;
+}
+
+.setting-item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.setting-item label {
+    margin-right: 10px;
+    flex: 1;
+}
+
+.setting-item input[type="number"],
+.setting-item select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+#winner-display {
+    font-size: 1.5rem;
+    text-align: center;
+    margin: 20px 0;
+    font-weight: bold;
+    color: #1a3a70;
+}
+
+.final-score, .game-status {
+    margin: 20px 0;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.game-status p {
+    margin: 8px 0;
+}
+
+/* 響應式樣式 */
+@media (max-width: 768px) {
+    .team-score, .game-info {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .baseball-field {
+        width: 250px;
+        height: 250px;
+    }
+
+    .buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
