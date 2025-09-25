@@ -144,6 +144,46 @@ h1 {
     top: 150px;
 }
 
+/* 得分特效樣式 */
+.score-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(41, 128, 185, 0.9); /* 藍色底色，更專業清爽 */
+    color: #ffffff; /* 白色文字，增加對比度 */
+    font-size: 2.5rem; /* 增大文字尺寸 */
+    font-weight: bold;
+    padding: 25px 40px; /* 增加內邊距 */
+    border-radius: 15px; /* 增大圓角 */
+    text-align: center;
+    box-shadow: 0 0 30px rgba(52, 152, 219, 0.8); /* 藍色系陰影 */
+    z-index: 10;
+    animation: scoreEffect 3s ease-in-out; /* 延長動畫時間從 1.5s 到 3s */
+    width: 80%; /* 設置最大寬度 */
+    max-width: 450px; /* 限制最大寬度 */
+    border: 3px solid #ffffff; /* 添加白色邊框增加視覺效果 */
+}
+
+@keyframes scoreEffect {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    15% { /* 加快出現速度 */
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    85% { /* 延長停留時間 */
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
 /* 題目區域樣式 */
 .question-area {
     margin-top: 20px;
@@ -189,7 +229,7 @@ h1 {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 40px; /* 增加間距從 20px 到 40px */
     margin-top: 20px;
 }
 
@@ -233,6 +273,16 @@ h1 {
 
 .wrong:hover {
     background-color: #f44336;
+}
+
+/* 特別加大答對/答錯按鈕的間距 */
+#answer-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 80px; /* 大幅增加答對和答錯按鈕之間的間距 */
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 /* 模態對話框樣式 */

@@ -110,6 +110,10 @@ const elements = {
     runnerThird: document.getElementById('runner-third'),
     runnerHome: document.getElementById('runner-home'),
 
+    // 得分特效
+    scoreEffect: document.getElementById('score-effect'),
+    scoreEffectText: document.getElementById('score-effect-text'),
+
     // 題目區域
     questionContainer: document.getElementById('question-container'),
     questionDifficulty: document.getElementById('question-difficulty'),
@@ -439,36 +443,41 @@ function resetQuestionArea() {
 
 // 推進壘包
 function advanceBases(hitType) {
+    // 記錄推進前的分數，用於計算得了多少分
+    let beforeScoreTeam1 = gameState.scores.team1;
+    let beforeScoreTeam2 = gameState.scores.team2;
+    let totalRuns = 0;
+
     // 根據打擊類型決定推進壘包的邏輯
     switch (hitType) {
         case 'homerun':
             // 全壘打：所有壘上跑者得分，打者得分
             if (gameState.bases.third) {
-                addScore();
+                totalRuns++;
                 gameState.bases.third = false;
             }
             if (gameState.bases.second) {
-                addScore();
+                totalRuns++;
                 gameState.bases.second = false;
             }
             if (gameState.bases.first) {
-                addScore();
+                totalRuns++;
                 gameState.bases.first = false;
             }
             // 打者本人也得分
-            addScore();
+            totalRuns++;
             break;
 
         case 'triple':
             // 三壘打：所有壘上跑者得分，打者到三壘
             if (gameState.bases.third) {
-                addScore();
+                totalRuns++;
             }
             if (gameState.bases.second) {
-                addScore();
+                totalRuns++;
             }
             if (gameState.bases.first) {
-                addScore();
+                totalRuns++;
             }
             // 打者到三壘
             gameState.bases = { first: false, second: false, third: true };
@@ -477,10 +486,10 @@ function advanceBases(hitType) {
         case 'double':
             // 二壘打：二三壘跑者得分，一壘跑者到三壘，打者到二壘
             if (gameState.bases.third) {
-                addScore();
+                totalRuns++;
             }
             if (gameState.bases.second) {
-                addScore();
+                totalRuns++;
             }
             // 一壘跑者到三壘
             gameState.bases.third = gameState.bases.first;
@@ -492,7 +501,7 @@ function advanceBases(hitType) {
         case 'single':
             // 安打：三壘跑者得分，一二壘跑者各進一個壘，打者到一壘
             if (gameState.bases.third) {
-                addScore();
+                totalRuns++;
             }
             // 二壘跑者到三壘
             gameState.bases.third = gameState.bases.second;
@@ -502,15 +511,56 @@ function advanceBases(hitType) {
             gameState.bases.first = true;
             break;
     }
+
+    // 一次性增加分數
+    if (totalRuns > 0) {
+        if (gameState.currentTeam === 1) {
+            gameState.scores.team1 += totalRuns;
+            // 顯示得分特效
+            showScoreEffect(1, totalRuns);
+        } else {
+            gameState.scores.team2 += totalRuns;
+            // 顯示得分特效
+            showScoreEffect(2, totalRuns);
+        }
+    }
 }
 
-// 增加分數
+// 增加分數 (單個得分情況使用)
 function addScore() {
+    // 根據當前隊伍增加分數
     if (gameState.currentTeam === 1) {
         gameState.scores.team1++;
+        // 顯示得分特效
+        showScoreEffect(1, 1); // 傳入得分數1
     } else {
         gameState.scores.team2++;
+        // 顯示得分特效
+        showScoreEffect(2, 1); // 傳入得分數1
     }
+}
+
+// 顯示得分特效
+function showScoreEffect(team, points) {
+    // 設置特效文字
+    const teamName = team === 1 ? '攻擊隊' : '守備隊';
+    elements.scoreEffectText.textContent = `得${points}分!`;
+
+    // 顯示特效元素
+    elements.scoreEffect.style.display = 'block';
+
+    // 添加動畫結束監聽器，在動畫結束後隱藏特效
+    const handleAnimationEnd = () => {
+        elements.scoreEffect.style.display = 'none';
+        elements.scoreEffect.removeEventListener('animationend', handleAnimationEnd);
+    };
+
+    elements.scoreEffect.addEventListener('animationend', handleAnimationEnd);
+
+    // 重置動畫
+    elements.scoreEffect.style.animation = 'none';
+    elements.scoreEffect.offsetHeight; // 觸發重排，使動畫能夠重新開始
+    elements.scoreEffect.style.animation = 'scoreEffect 1.5s ease-in-out'; // 更新為 1.5 秒
 }
 
 // 切換隊伍
