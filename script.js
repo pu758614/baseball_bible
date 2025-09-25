@@ -22,38 +22,66 @@ const gameState = {
     },
     // 遊戲是否進行中
     inProgress: false,
-    // 計時器
-    timer: null,
-    timeLeft: 30,
+
     // 題目庫
     questions: {
         single: [
-            "耶穌是從伯利恆出生的嗎？（是/否）",
-            "摩西是否寫了五經？（是/否）",
-            "大衛是否是以色列的第一位國王？（是/否）",
-            "保羅在被囚期間是否寫了以弗所書？（是/否）",
-            "挪亞方舟是否停在亞拉臘山上？（是/否）"
+            "以色列百姓都同意遵守神的律法，並且發誓遵行嗎？(v29)",
+            "百姓立誓不再將女兒嫁給外邦人，也不娶外邦人的女兒嗎？(v30)",
+            "百姓同意在安息日和聖日，不從外邦人那裡買貨物嗎？(v31)",
+            "他們決定每七年放棄耕種，並豁免債務嗎？(v31)",
+            "百姓承諾每年奉獻三分之一舍客勒作為聖殿的使用費用嗎？(v32)",
+            "百姓答應供應祭壇上的常獻祭、素祭、燔祭等嗎？(v33)",
+            "他們決定每年投籤，按時將木柴送到神的殿中焚燒嗎？(v34)",
+            "他們承諾將土產初熟之物和牲畜頭生的奉到殿中嗎？(v35-36)",
+            "百姓說要把初熟之麥子、酒和油帶到利未人那裡嗎？(v37)",
+            "百姓說「我們必不撇棄我們神的殿」嗎？(v39)",
+            "立約的百姓說要增加田地的界線以便多收產量嗎？(v30)",
+            "他們決定將十分之一交給國王作為稅收嗎？(v37)",
+            "百姓立約要在安息日去和外邦人做買賣嗎？(v31)",
+            "他們約定要建造更多的城牆來防禦仇敵嗎？(v31)",
+            "他們承諾每年奉獻一舍客勒作為聖殿的使用費嗎？(v32)",
+            "他們承諾每七年獻上特別的贖罪祭嗎？(v31)",
+            "百姓說要把祭司的衣服當作供物奉獻嗎？(v36)",
+            "他們決定將頭生的孩子獻為奴僕嗎？(v36)",
+            "以色列人說不要把初熟之果子帶進聖殿嗎？(v35)",
+            "他們同意撇棄神的殿，不再奉獻嗎？(v39)"
         ],
         double: [
-            "耶穌的十二門徒不包括誰？ A.彼得 B.猶大 C.提摩太 D.約翰",
-            "哪一卷福音書不是符類福音？ A.馬太福音 B.馬可福音 C.約翰福音 D.路加福音",
-            "以下哪位不是舊約先知？ A.以賽亞 B.耶利米 C.巴拿巴 D.以西結",
-            "耶穌在哪裡長大？ A.伯利恆 B.拿撒勒 C.耶路撒冷 D.埃及",
-            "聖經中最短的經文是？ A.耶穌哭了 B.應當喜樂 C.神是愛 D.要常常禱告"
+            "百姓與祭司立約，是要遵行什麼？A. 摩西的律法 B. 列王的法令 C. 亞達薛西王的命令 D. 自己的傳統 (v29)",
+            "百姓立誓不可與誰通婚？A. 利未人 B. 外邦人 C. 祭司 D. 本族人 (v30)",
+            "百姓在安息日決定怎麼做？A. 多做買賣 B. 出去打仗 C. 不買外邦人的貨物 D. 種田 (v31)",
+            "他們每幾年要免債？A. 每三年 B. 每五年 C. 每七年 D. 每十年 (v31)",
+            "百姓定規每年奉獻多少舍客勒作為聖殿費用？A. 二分之一 B. 三分之一 C. 一舍客勒 D. 十分之一 (v32)",
+            "百姓承諾要供應哪些祭物？A. 常獻祭、素祭、燔祭 B. 金牛犢 C. 外邦神像 D. 新的歌詩 (v33)",
+            "他們如何決定誰要送木柴？A. 輪流表決 B. 投籤 C. 祭司挑選 D. 王下命令 (v34)",
+            "百姓要把什麼奉到殿中？A. 初熟的果子 B. 金銀器皿 C. 武器 D. 書卷 (v35)",
+            "百姓要把頭生的牲畜奉給誰？A. 祭司 B. 君王 C. 利未人 D. 長老 (v36)",
+            "百姓要將五穀、新酒和油交給誰？A. 利未人 B. 君王 C. 外邦商人 D. 士兵 (v37)",
+            "利未人收了十分之一要怎麼做？A. 自己留下 B. 送到倉房 C. 拿去做買賣 D. 分給百姓 (v38)",
+            "祭司亞倫的子孫要與誰一同收十分之一？A. 外邦人 B. 利未人 C. 君王 D. 文士 (v38)",
+            "利未人把十分之一送到聖殿時，要送到哪裡？A. 城門 B. 聖所的倉房 C. 王宮 D. 會堂 (v38-39)",
+            "倉房裡存放什麼？A. 五穀、新酒、油 B. 武器 C. 石頭 D. 衣服 (v39)",
+            "(單選題)最後百姓共同的決心是什麼？A. 不撇棄神的殿 B. 建更多城牆 C. 與外邦人立約 D. 出埃及 (v39)"
         ],
         triple: [
-            "請解釋浪子回頭比喻中大兒子的態度",
-            "解釋耶穌的「愛你的敵人」教導如何超越舊約律法",
-            "對比彼得與猶大的背叛，為何結局不同？",
-            "解釋保羅在哥林多前書13章中對愛的定義",
-            "解釋耶穌在馬太福音5章中如何重新詮釋律法"
+            "百姓立誓的主要內容有哪些？A. 遵守律法 B. 不與外邦人通婚 C. 守安息日 D. 擴張疆界 (v29-31)",
+            "百姓同意的安息日規定是什麼？A. 不做工 B. 不買賣 C. 豁免債務 D. 建造新城 (v31)",
+            "聖殿需要哪些經費支持？A. 燔祭 B. 素祭 C. 守節 D. 軍隊 (v32-33)",
+            "百姓要供應的東西有哪些？A. 初熟的果子 B. 頭生的牲畜 C. 新酒 D. 兵器 (v35-37)",
+            "百姓要把什麼帶到祭司的倉房？A. 十分之一 B. 五穀 C. 新酒 D. 外邦貨 (v37-39)",
+            "參與管理倉房的有哪些人？A. 祭司 B. 利未人 C. 歌唱的 D. 守門的 (v38-39)",
+            "百姓對「十分之一」的規定是什麼？A. 要交給利未人 B. 利未人再交十分之一 C. 全數留下 D. 部分給祭司 (v37-38)",
+            "百姓承諾獻上的包括哪些？A. 麥子 B. 酒 C. 油 D. 武器 (v35-37)",
+            "百姓定規按時送木柴是為了什麼？A. 保證祭壇常有火 B. 按律法要求 C. 預防外敵 D. 供應燔祭 (v34)",
+            "百姓最後的總結承諾有哪些？A. 不撇棄神的殿 B. 供應倉房 C. 與外邦人結盟 D. 照顧祭司和利未人 (v39)"
         ],
         homerun: [
-            "如何把浪子回頭的教訓應用在現代生活？",
-            "在面對職場衝突時，如何應用聖經的和解原則？",
-            "請解釋羅馬書8章中保羅對預定論的教導，並談談它如何影響我們的信仰生活",
-            "請背誦登山寶訓（馬太福音5-7章）的核心教導，並解釋如何在日常生活中實踐",
-            "耶穌對門徒說「你們是世上的鹽，世上的光」，這對現代基督徒的社會責任有什麼啟示？"
+            "百姓立誓要遵守的是誰的律法？(v29)",
+            "百姓在安息日承諾不做什麼？(v31)",
+            "他們每幾年要免債？(v31)",
+            "百姓定規每年奉獻多少舍客勒作為聖殿使用費？(v32)",
+            "最後百姓的總結承諾是什麼？(v39)"
         ]
     },
     // 當前題目
@@ -61,9 +89,6 @@ const gameState = {
     currentQuestionType: null,
     // 遊戲設定
     settings: {
-        timerDuration: 30,
-        enableSteal: true,
-        enableHint: true
     }
 };
 
@@ -89,7 +114,6 @@ const elements = {
     questionContainer: document.getElementById('question-container'),
     questionDifficulty: document.getElementById('question-difficulty'),
     questionContent: document.getElementById('question-content'),
-    timerCount: document.getElementById('timer-count'),
 
     // 按鈕
     hitButton: document.getElementById('hit-button'),
@@ -118,9 +142,6 @@ const elements = {
 
     // 設定
     inningsSetting: document.getElementById('innings-setting'),
-    timerSetting: document.getElementById('timer-setting'),
-    stealSetting: document.getElementById('steal-setting'),
-    hintSetting: document.getElementById('hint-setting'),
     startGameButton: document.getElementById('start-game'),
     newGameButton: document.getElementById('new-game')
 };
@@ -170,8 +191,6 @@ function resetGameState() {
     gameState.currentTeam = 1;
     gameState.bases = { first: false, second: false, third: false };
     gameState.inProgress = false;
-    clearInterval(gameState.timer);
-    gameState.timeLeft = gameState.settings.timerDuration;
 }
 
 // 更新UI
@@ -192,9 +211,6 @@ function updateUI() {
 
     // 更新壘包
     updateBases();
-
-    // 更新計時器
-    elements.timerCount.textContent = gameState.timeLeft;
 }
 
 // 更新壘包顯示
@@ -252,9 +268,6 @@ function setupEventListeners() {
 
             // 設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
-            elements.timerSetting.value = gameState.settings.timerDuration;
-            elements.stealSetting.checked = gameState.settings.enableSteal;
-            elements.hintSetting.checked = gameState.settings.enableHint;
 
             // 關鍵步驟：確保遊戲狀態為進行中
             gameState.inProgress = true;
@@ -283,9 +296,6 @@ function setupEventListeners() {
 function startGame() {
     // 從設定中獲取值
     gameState.totalInnings = parseInt(elements.inningsSetting.value);
-    gameState.settings.timerDuration = parseInt(elements.timerSetting.value);
-    gameState.settings.enableSteal = elements.stealSetting.checked;
-    gameState.settings.enableHint = elements.hintSetting.checked;
 
     // 更新UI
     elements.totalInnings.textContent = gameState.totalInnings;
@@ -316,24 +326,30 @@ function handleHit() {
     // 隱藏打擊按鈕，顯示答案按鈕
     elements.hitButton.style.display = 'none';
     elements.answerButtons.style.display = 'flex';
-
-    // 開始計時
-    startTimer();
 }
 
 // 獲取隨機題目
 function getRandomQuestion() {
-    // 隨機選擇題目類型
-    const types = ['single', 'double', 'triple', 'homerun'];
-    const randomType = types[Math.floor(Math.random() * types.length)];
+    // 將所有題目放入一個陣列
+    const allQuestions = [];
 
-    // 根據類型選擇隨機題目
-    const questions = gameState.questions[randomType];
-    const randomIndex = Math.floor(Math.random() * questions.length);
+    // 遍歷所有類型的題目並加入陣列
+    for (const type of ['single', 'double', 'triple', 'homerun']) {
+        gameState.questions[type].forEach(question => {
+            allQuestions.push({
+                type: type,
+                question: question
+            });
+        });
+    }
+
+    // 從所有題目中隨機選一題
+    const randomIndex = Math.floor(Math.random() * allQuestions.length);
+    const selectedQuestion = allQuestions[randomIndex];
 
     // 設置當前題目
-    gameState.currentQuestion = questions[randomIndex];
-    gameState.currentQuestionType = randomType;
+    gameState.currentQuestion = selectedQuestion.question;
+    gameState.currentQuestionType = selectedQuestion.type;
 }
 
 // 顯示題目
@@ -348,15 +364,15 @@ function showQuestion() {
             hitResult = '安打';
             break;
         case 'double':
-            difficultyText = '二壘題（選擇題，4個選項）';
+            difficultyText = '二壘題（單選題）';
             hitResult = '二壘打';
             break;
         case 'triple':
-            difficultyText = '三壘題（問答題）';
+            difficultyText = '三壘題（複選題）';
             hitResult = '三壘打';
             break;
         case 'homerun':
-            difficultyText = '全壘打題（進階問答題）';
+            difficultyText = '全壘打題（問答題）';
             hitResult = '全壘打';
             break;
     }
@@ -368,34 +384,10 @@ function showQuestion() {
     elements.questionContainer.style.display = 'block';
 }
 
-// 開始計時器
-function startTimer() {
-    // 重設時間
-    gameState.timeLeft = gameState.settings.timerDuration;
-    elements.timerCount.textContent = gameState.timeLeft;
 
-    // 清除舊的計時器
-    if (gameState.timer) {
-        clearInterval(gameState.timer);
-    }
-
-    // 開始新的計時器
-    gameState.timer = setInterval(() => {
-        gameState.timeLeft--;
-        elements.timerCount.textContent = gameState.timeLeft;
-
-        // 時間到
-        if (gameState.timeLeft <= 0) {
-            clearInterval(gameState.timer);
-            handleWrongAnswer(); // 時間到視為答錯
-        }
-    }, 1000);
-}
 
 // 處理正確答案
 function handleCorrectAnswer() {
-    // 停止計時器
-    clearInterval(gameState.timer);
 
     // 根據題目類型推進壘包
     advanceBases(gameState.currentQuestionType);
@@ -412,8 +404,6 @@ function handleCorrectAnswer() {
 
 // 處理錯誤答案
 function handleWrongAnswer() {
-    // 停止計時器
-    clearInterval(gameState.timer);
 
     // 增加出局數
     gameState.outs++;
@@ -613,9 +603,6 @@ function loadGameState() {
 
             // 設置設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
-            elements.timerSetting.value = gameState.settings.timerDuration;
-            elements.stealSetting.checked = gameState.settings.enableSteal;
-            elements.hintSetting.checked = gameState.settings.enableHint;
 
             // 確保設定對話框不顯示
             elements.settingsModal.style.display = 'none';

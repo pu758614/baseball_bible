@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>棒球查經遊戲</title>
+    <title>棒球查經</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>棒球查經遊戲</h1>
+        <h1>棒球查經</h1>
     </header>
 
     <div class="game-container">
@@ -63,10 +63,6 @@
                 <div class="question-text">
                     <p id="question-content"></p>
                 </div>
-                <div class="timer">
-                    <span>時間剩餘: </span>
-                    <span id="timer-count">30</span> 秒
-                </div>
             </div>
 
             <div class="buttons">
@@ -91,18 +87,6 @@
                         <option value="5">5局</option>
                         <option value="7">7局</option>
                     </select>
-                </div>
-                <div class="setting-item">
-                    <label for="timer-setting">答題時間 (秒):</label>
-                    <input type="number" id="timer-setting" min="10" max="60" value="30">
-                </div>
-                <div class="setting-item">
-                    <input type="checkbox" id="steal-setting" checked>
-                    <label for="steal-setting">啟用搶答</label>
-                </div>
-                <div class="setting-item">
-                    <input type="checkbox" id="hint-setting" checked>
-                    <label for="hint-setting">啟用提示機制</label>
                 </div>
                 <div class="buttons">
                     <button id="start-game" class="action-button">開始遊戲</button>
