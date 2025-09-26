@@ -27,6 +27,8 @@ const gameState = {
     },
     // 遊戲是否進行中
     inProgress: false,
+    // 已經出過的題目
+    usedQuestions: [],
 
     // 題目庫
     questions: {
@@ -40,11 +42,11 @@ const gameState = {
             "他們決定每年投籤，按時將木柴送到神的殿中焚燒嗎？(v34)",
             "他們承諾將土產初熟之物和牲畜頭生的奉到殿中嗎？(v35-36)",
             "百姓說要把初熟之麥子、酒和油帶到利未人那裡嗎？(v37)",
-            "百姓說「我們必不撇棄我們神的殿」嗎？(v39)",
-            "立約的百姓說要增加田地的界線以便多收產量嗎？(v30)",
+            "百姓有說「我們必不撇棄我們神的殿」嗎？(v39)",
+            "百姓願意將自己的兒子娶外邦人嗎？(v30)",
             "他們決定將十分之一交給國王作為稅收嗎？(v37)",
-            "百姓立約要在安息日去和外邦人做買賣嗎？(v31)",
-            "他們約定要建造更多的城牆來防禦仇敵嗎？(v31)",
+            "當利未人收取十分之一的時候，亞倫的兄弟中，會有一個祭司與利未人同在嗎？(v38)",
+            "他們每逢七年會豁免債務嗎？(v31)",
             "他們承諾每年奉獻一舍客勒作為聖殿的使用費嗎？(v32)",
             "他們承諾每七年獻上特別的贖罪祭嗎？(v31)",
             "百姓說要把祭司的衣服當作供物奉獻嗎？(v36)",
@@ -82,9 +84,9 @@ const gameState = {
             "百姓最後的總結承諾有哪些？A. 不撇棄神的殿 B. 供應倉房 C. 與外邦人結盟 D. 照顧祭司和利未人 (v39)"
         ],
         homerun: [
-            "百姓立誓要遵守的是誰的律法？(v29)",
+            "誰負責收取百姓的十分之一？",
             "百姓在安息日承諾不做什麼？(v31)",
-            "他們每幾年要免債？(v31)",
+            "初生的兒子要怎樣處理？ (v.36)",
             "百姓定規每年奉獻多少舍客勒作為聖殿使用費？(v32)",
             "最後百姓的總結承諾是什麼？(v39)"
         ]
@@ -210,6 +212,8 @@ function resetGameState() {
     gameState.currentTeam = 1;
     gameState.bases = { first: false, second: false, third: false };
     gameState.inProgress = false;
+    // 清空已使用題目清單
+    gameState.usedQuestions = [];
 
     // 清空輸入框
     if (elements.team1NameInput) elements.team1NameInput.value = "";
@@ -294,6 +298,8 @@ function setupEventListeners() {
             gameState.currentTeam = parsedState.currentTeam;
             gameState.bases = parsedState.bases;
             gameState.settings = parsedState.settings;
+            // 恢復已使用過的題目清單
+            gameState.usedQuestions = parsedState.usedQuestions || [];
 
             // 設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
@@ -378,16 +384,41 @@ function getRandomQuestion() {
     // 遍歷所有類型的題目並加入陣列
     for (const type of ['single', 'double', 'triple', 'homerun']) {
         gameState.questions[type].forEach(question => {
-            allQuestions.push({
-                type: type,
-                question: question
-            });
+            // 創建唯一識別符來判斷題目是否已使用過
+            const questionId = `${type}:${question}`;
+
+            // 如果題目未使用過，則加入可選題目陣列
+            if (!gameState.usedQuestions.includes(questionId)) {
+                allQuestions.push({
+                    type: type,
+                    question: question,
+                    id: questionId
+                });
+            }
         });
     }
 
-    // 從所有題目中隨機選一題
+    // 如果所有題目都已經用過了，則重置已使用題目列表
+    if (allQuestions.length === 0) {
+        gameState.usedQuestions = [];
+        // 重新獲取所有題目
+        for (const type of ['single', 'double', 'triple', 'homerun']) {
+            gameState.questions[type].forEach(question => {
+                allQuestions.push({
+                    type: type,
+                    question: question,
+                    id: `${type}:${question}`
+                });
+            });
+        }
+    }
+
+    // 從未使用過的題目中隨機選一題
     const randomIndex = Math.floor(Math.random() * allQuestions.length);
     const selectedQuestion = allQuestions[randomIndex];
+
+    // 將此題目標記為已使用
+    gameState.usedQuestions.push(selectedQuestion.id);
 
     // 設置當前題目
     gameState.currentQuestion = selectedQuestion.question;
@@ -667,7 +698,8 @@ function saveGameState() {
         currentTeam: gameState.currentTeam,
         bases: gameState.bases,
         inProgress: gameState.inProgress,
-        settings: gameState.settings
+        settings: gameState.settings,
+        usedQuestions: gameState.usedQuestions // 保存已使用過的題目清單
     };
 
     // 將狀態對象轉換為 JSON 字串並保存
@@ -695,6 +727,8 @@ function loadGameState() {
             gameState.bases = parsedState.bases;
             gameState.inProgress = parsedState.inProgress;
             gameState.settings = parsedState.settings;
+            // 恢復已使用過的題目清單
+            gameState.usedQuestions = parsedState.usedQuestions || [];
 
             // 設置設定值到設定面板（以便下次開始新遊戲時使用相同設定）
             elements.inningsSetting.value = gameState.totalInnings;
