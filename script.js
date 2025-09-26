@@ -124,6 +124,10 @@ const elements = {
     scoreEffect: document.getElementById('score-effect'),
     scoreEffectText: document.getElementById('score-effect-text'),
 
+    // 攻守交換提示
+    teamSwitchEffect: document.getElementById('team-switch-effect'),
+    teamSwitchText: document.getElementById('team-switch-text'),
+
     // 題目區域
     questionContainer: document.getElementById('question-container'),
     questionDifficulty: document.getElementById('question-difficulty'),
@@ -261,6 +265,43 @@ function setupEventListeners() {
     // 答題結果按鈕
     elements.correctButton.addEventListener('click', handleCorrectAnswer);
     elements.wrongButton.addEventListener('click', handleWrongAnswer);
+
+    // 添加鍵盤快捷鍵
+    document.addEventListener('keydown', (event) => {
+        // 空白鍵 - 打擊（只在遊戲進行中且打擊按鈕可見時生效）
+        if (event.code === 'Space' && gameState.inProgress &&
+            elements.hitButton.style.display !== 'none') {
+            event.preventDefault(); // 防止頁面滾動
+            // 添加視覺反饋
+            elements.hitButton.classList.add('active');
+            setTimeout(() => {
+                handleHit();
+                elements.hitButton.classList.remove('active');
+            }, 100);
+        }
+
+        // 只有當題目顯示時才處理答題快捷鍵
+        else if (elements.questionContainer.style.display === 'block') {
+            // Z 鍵 - 答對
+            if (event.key.toLowerCase() === 'z') {
+                // 添加視覺反饋
+                elements.correctButton.classList.add('active');
+                setTimeout(() => {
+                    handleCorrectAnswer();
+                    elements.correctButton.classList.remove('active');
+                }, 100);
+            }
+            // C 鍵 - 答錯
+            else if (event.key.toLowerCase() === 'c') {
+                // 添加視覺反饋
+                elements.wrongButton.classList.add('active');
+                setTimeout(() => {
+                    handleWrongAnswer();
+                    elements.wrongButton.classList.remove('active');
+                }, 100);
+            }
+        }
+    });
 
     // 設定按鈕
     elements.startGameButton.addEventListener('click', startGame);
@@ -632,6 +673,29 @@ function showScoreEffect(team, points) {
     elements.scoreEffect.style.animation = 'scoreEffect 3s ease-in-out'; // 更新為 3 秒
 }
 
+// 顯示攻守交換提示
+function showTeamSwitchEffect(team) {
+    // 設置特效文字 - 顯示現在輪到哪個隊伍攻擊
+    const teamName = team === 1 ? gameState.teamNames.team1 : gameState.teamNames.team2;
+    elements.teamSwitchText.textContent = `換 ${teamName} 攻擊!`;
+
+    // 顯示特效元素
+    elements.teamSwitchEffect.style.display = 'block';
+
+    // 添加動畫結束監聽器，在動畫結束後隱藏特效
+    const handleAnimationEnd = () => {
+        elements.teamSwitchEffect.style.display = 'none';
+        elements.teamSwitchEffect.removeEventListener('animationend', handleAnimationEnd);
+    };
+
+    elements.teamSwitchEffect.addEventListener('animationend', handleAnimationEnd);
+
+    // 重置動畫
+    elements.teamSwitchEffect.style.animation = 'none';
+    elements.teamSwitchEffect.offsetHeight; // 觸發重排，使動畫能夠重新開始
+    elements.teamSwitchEffect.style.animation = 'scoreEffect 3s ease-in-out'; // 使用相同的動畫效果
+}
+
 // 切換隊伍
 function switchTeams() {
     // 重置出局數
@@ -650,8 +714,15 @@ function switchTeams() {
         // 檢查遊戲是否結束
         if (gameState.currentInning > gameState.totalInnings) {
             endGame();
+            return; // 遊戲結束時不顯示攻守交換提示
         }
     }
+
+    // 顯示攻守交換提示
+    showTeamSwitchEffect(gameState.currentTeam);
+
+    // 更新 UI
+    updateUI();
 
     // 保存遊戲狀態
     saveGameState();

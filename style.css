@@ -248,6 +248,11 @@ h1 {
     background-color: #3498db;
 }
 
+.action-button.active {
+    background-color: #1c638f;
+    transform: scale(0.98);
+}
+
 .result-button {
     padding: 12px 25px;
     font-size: 1.2rem;
@@ -266,6 +271,11 @@ h1 {
     background-color: #2ecc71;
 }
 
+.correct.active {
+    background-color: #1a7d44;
+    transform: scale(0.98);
+}
+
 .wrong {
     background-color: #e74c3c;
     color: white;
@@ -273,6 +283,11 @@ h1 {
 
 .wrong:hover {
     background-color: #f44336;
+}
+
+.wrong.active {
+    background-color: #c0392b;
+    transform: scale(0.98);
 }
 
 /* 特別加大答對/答錯按鈕的間距 */
