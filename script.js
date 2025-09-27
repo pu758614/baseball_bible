@@ -283,7 +283,7 @@ function setupEventListeners() {
         // 只有當題目顯示時才處理答題快捷鍵
         else if (elements.questionContainer.style.display === 'block') {
             // Z 鍵 - 答對
-            if (event.key.toLowerCase() === 'z') {
+            if (event.key.toLowerCase() === 'x') {
                 // 添加視覺反饋
                 elements.correctButton.classList.add('active');
                 setTimeout(() => {
