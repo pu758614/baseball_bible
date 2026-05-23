@@ -250,7 +250,7 @@ const gameState = {
         homerun: [
             "55. 請說出第4-6節提到的七個「一」。(v4-6)",
             "56. 基督所賜的五種恩賜是哪五種？(v11)",
-            "57. 「脫去舊人、穿上新人」各是什麼意思？(v22-24)",
+            "57. 請舉一個生活中的例子，說明什麼是「脫去舊人、穿上新人」？(v22-24)",
             "58. 第25-28節提到哪些生活上該改變的事？請說出三項即可。(v25-28)",
             "59. 第32節說信徒彼此之間應該怎樣？饒恕的標準是什麼？(v32)"
         ]
@@ -293,6 +293,7 @@ const elements = {
     teamSwitchText: document.getElementById('team-switch-text'),
 
     // 題目區域
+    questionModal: document.getElementById('question-modal'),
     questionContainer: document.getElementById('question-container'),
     questionDifficulty: document.getElementById('question-difficulty'),
     questionContent: document.getElementById('question-content'),
@@ -449,8 +450,8 @@ function setupEventListeners() {
             }, 100);
         }
 
-        // 只有當題目顯示時才處理答題快捷鍵
-        else if (elements.questionContainer.style.display === 'block') {
+        // 只有當題目視窗顯示時才處理答題快捷鍵
+        else if (elements.questionModal.style.display === 'flex') {
             // Z 鍵 - 答對
             if (event.key.toLowerCase() === 'x') {
                 // 添加視覺反饋
@@ -575,19 +576,81 @@ function startGame() {
 function handleHit() {
     if (!gameState.inProgress) return;
 
+    // 立即隱藏打擊按鈕防止連點
+    elements.hitButton.style.display = 'none';
+
     // 打擊音效 + 特效
     SFX.hit();
     fireHitEffect();
 
-    // 抽取隨機題目
+    // 抽取隨機題目（先抽好，動畫結束後才顯示）
     getRandomQuestion();
 
-    // 顯示題目
-    showQuestion();
+    // 播放打擊動畫，結束後顯示題目
+    playHitAnimation(gameState.currentQuestionType, () => {
+        // 顯示題目
+        showQuestion();
+        // 顯示答案按鈕
+        elements.answerButtons.style.display = 'flex';
+    });
+}
 
-    // 隱藏打擊按鈕，顯示答案按鈕
-    elements.hitButton.style.display = 'none';
-    elements.answerButtons.style.display = 'flex';
+// 播放打擊動畫序列
+function playHitAnimation(hitType, onComplete) {
+    const overlay = document.getElementById('hit-animation-overlay');
+    const bat = overlay.querySelector('.hit-anim-bat');
+    const ball = overlay.querySelector('.hit-anim-ball');
+    const impact = overlay.querySelector('.hit-anim-impact');
+    const result = document.getElementById('hit-anim-result');
+
+    // 重置所有動畫 class
+    bat.className = 'hit-anim-bat';
+    ball.className = 'hit-anim-ball';
+    impact.className = 'hit-anim-impact';
+    result.className = 'hit-anim-result';
+    result.textContent = '';
+
+    // 決定結果文字
+    let resultText = '';
+    let isHomerun = false;
+    switch (hitType) {
+        case 'single':  resultText = '⚾ 安打！'; break;
+        case 'double':  resultText = '⚾⚾ 二壘打！'; break;
+        case 'triple':  resultText = '⚾⚾⚾ 三壘打！'; break;
+        case 'homerun': resultText = '💥 全壘打！！'; isHomerun = true; break;
+    }
+
+    // 顯示覆蓋層
+    overlay.style.display = 'flex';
+
+    // 第1步: 揮棒 (0ms)
+    setTimeout(() => bat.classList.add('swing'), 100);
+
+    // 第2步: 撞擊火花 (400ms)
+    setTimeout(() => {
+        impact.classList.add('show');
+        ball.classList.add('fly');
+    }, 400);
+
+    // 第3步: 顯示結果文字 (900ms)
+    setTimeout(() => {
+        result.textContent = resultText;
+        result.classList.add('show');
+        if (isHomerun) {
+            result.classList.add('homerun-result');
+            // 全壘打加碼彩紙
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 80, spread: 100, origin: { y: 0.5 }, zIndex: 30000,
+                    colors: ['#ffd700', '#ff4500', '#ff69b4'] });
+            }
+        }
+    }, 900);
+
+    // 第4步: 淡出覆蓋層，顯示題目 (1800ms)
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        onComplete();
+    }, 1800);
 }
 
 // 獲取隨機題目
@@ -670,8 +733,8 @@ function showQuestion() {
     elements.questionDifficulty.textContent = `${difficultyText} - ${hitResult}`;
     elements.questionContent.textContent = gameState.currentQuestion;
 
-    // 顯示題目容器
-    elements.questionContainer.style.display = 'block';
+    // 顯示題目蓋板視窗
+    elements.questionModal.style.display = 'flex';
 }
 
 
@@ -688,8 +751,9 @@ function handleCorrectAnswer() {
     // 根據題目類型推進壘包
     const totalRuns = advanceBases(gameState.currentQuestionType);
 
-    // 隱藏答案按鈕避免重複點擊
+    // 隱藏題目視窗與答案按鈕
     elements.answerButtons.style.display = 'none';
+    elements.questionModal.style.display = 'none';
 
     // 播放跑壘動畫，動畫結束後再顯示得分特效和更新 UI
     animateRunners(beforeBases, gameState.currentQuestionType, () => {
@@ -709,6 +773,9 @@ function handleCorrectAnswer() {
 
 // 處理錯誤答案
 function handleWrongAnswer() {
+
+    // 先關閉題目視窗
+    elements.questionModal.style.display = 'none';
 
     // 答錯音效 + 特效
     SFX.wrong();
@@ -735,8 +802,8 @@ function handleWrongAnswer() {
 
 // 重置題目區域
 function resetQuestionArea() {
-    // 隱藏題目容器
-    elements.questionContainer.style.display = 'none';
+    // 隱藏題目蓋板視窗
+    elements.questionModal.style.display = 'none';
 
     // 隱藏答案按鈕，顯示打擊按鈕
     elements.answerButtons.style.display = 'none';

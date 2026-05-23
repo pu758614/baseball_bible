@@ -90,20 +90,35 @@
             <span id="team-switch-text">攻守交換!</span>
         </div>
 
-        <!-- 題目區域 -->
-        <div class="question-area">
-            <div id="question-container" style="display: none;">
-                <div class="question-type">
-                    <span id="question-difficulty"></span>
-                </div>
-                <div class="question-text">
-                    <p id="question-content"></p>
-                </div>
+        <!-- 打擊動畫覆蓋層 -->
+        <div id="hit-animation-overlay" class="hit-animation-overlay" style="display: none;">
+            <div class="hit-anim-content">
+                <div class="hit-anim-bat">🏏</div>
+                <div class="hit-anim-ball">⚾</div>
+                <div class="hit-anim-impact">💥</div>
+                <div class="hit-anim-result" id="hit-anim-result"></div>
             </div>
+        </div>
 
+        <!-- 打擊按鈕區域 -->
+        <div class="question-area">
             <div class="buttons">
                 <button id="hit-button" class="action-button">打擊!</button>
-                <div id="answer-buttons" style="display: none;">
+            </div>
+        </div>
+
+        <!-- 題目蓋板視窗 -->
+        <div id="question-modal" class="question-modal" style="display: none;">
+            <div class="question-modal-content">
+                <div id="question-container">
+                    <div class="question-type">
+                        <span id="question-difficulty"></span>
+                    </div>
+                    <div class="question-text">
+                        <p id="question-content"></p>
+                    </div>
+                </div>
+                <div id="answer-buttons" class="buttons" style="display: none;">
                     <button id="correct-button" class="result-button correct">答對</button>
                     <button id="wrong-button" class="result-button wrong">答錯</button>
                 </div>
