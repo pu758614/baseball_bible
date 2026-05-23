@@ -748,11 +748,17 @@ h1 {
 /* 球棒 — 揮棒動畫 */
 .hit-anim-bat {
     position: absolute;
-    font-size: 5rem;
     top: 50%; left: 30%;
+    width: 60px;
+    height: 180px;
     transform: translate(-50%, -50%) rotate(-45deg);
+    transform-origin: 50% 85%;
     opacity: 0;
-    filter: drop-shadow(0 0 12px rgba(255,215,0,0.6));
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.5));
+}
+.hit-anim-bat svg {
+    width: 100%;
+    height: 100%;
 }
 .hit-anim-bat.swing {
     animation: batSwing 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;

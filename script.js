@@ -1,12 +1,19 @@
 // 棒球查經遊戲邏輯
 
-// ===== 音效系統 (Web Audio API) =====
+// ===== 音效系統 (Web Audio API + 真實音效檔) =====
 const SFX = (() => {
     let ctx;
     function getCtx() {
         if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
         return ctx;
     }
+
+    // 預載真實音效檔案
+    const audioFiles = {
+        hit: new Audio('sounds/bat-hit.mp3')
+    };
+    audioFiles.hit.load();
+    audioFiles.hit.volume = 0.8;
 
     function playTone(freq, type, duration, vol = 0.3, delay = 0) {
         const c = getCtx();
@@ -71,30 +78,12 @@ const SFX = (() => {
     }
 
     return {
-        // 打擊 - 球棒擊球聲（木棒撞擊 + 清脆迴響）
+        // 打擊 - 真實擊球音效
         hit() {
-            const c = getCtx();
-            // 撞擊瞬間 - 短促噪音爆發
-            const impactLen = c.sampleRate * 0.06;
-            const impactBuf = c.createBuffer(1, impactLen, c.sampleRate);
-            const impactData = impactBuf.getChannelData(0);
-            for (let i = 0; i < impactLen; i++) {
-                impactData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.008));
-            }
-            const impactSrc = c.createBufferSource();
-            const impactGain = c.createGain();
-            impactSrc.buffer = impactBuf;
-            impactGain.gain.value = 0.5;
-            impactSrc.connect(impactGain);
-            impactGain.connect(c.destination);
-            impactSrc.start();
-
-            // 木棒迴響 - 中頻共鳴
-            playTone(800, 'sine', 0.08, 0.3);
-            playTone(1200, 'sine', 0.05, 0.2, 0.01);
-            // 球飛出的「鏗」聲
-            playTone(2400, 'sine', 0.04, 0.12, 0.02);
-            playTone(180, 'sine', 0.12, 0.2, 0.01);
+            const snd = audioFiles.hit;
+            snd.currentTime = 0;
+            snd.volume = 0.8;
+            snd.play().catch(() => {});
         },
         // 答對 - 群眾歡呼聲
         correct() {
