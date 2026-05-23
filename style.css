@@ -3,46 +3,77 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: '微軟正黑體', Arial, sans-serif;
+    font-family: 'Noto Sans TC', '微軟正黑體', Arial, sans-serif;
 }
 
 body {
-    background-color: #f0f8ff;
-    color: #333;
+    background: linear-gradient(135deg, #0a1628 0%, #1a2a50 30%, #0d1f3c 60%, #162040 100%);
+    color: #e0e6f0;
     line-height: 1.6;
     padding: 20px;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* tsParticles 背景 */
+#tsparticles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
 }
 
 header {
     text-align: center;
     margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 h1 {
-    color: #1a3a70;
+    color: #ffd700;
+    font-size: 2.8rem;
+    font-weight: 900;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2);
+    letter-spacing: 6px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2); }
+    100% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 0 0 80px rgba(255, 215, 0, 0.2); }
 }
 
 .game-container {
     max-width: 1000px;
     margin: 0 auto;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    background: rgba(15, 25, 55, 0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(0, 100, 255, 0.15), 0 0 80px rgba(0, 50, 150, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(100, 150, 255, 0.15);
 }
 
 /* 分數板樣式 */
 .scoreboard {
-    background-color: #1a3a70;
+    background: linear-gradient(135deg, #1a3a70 0%, #2a4a90 50%, #1a3a70 100%);
     color: white;
-    border-radius: 8px;
-    padding: 15px;
+    border-radius: 12px;
+    padding: 18px;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
+    border: 1px solid rgba(100, 160, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 50, 150, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .team-score {
@@ -55,8 +86,21 @@ h1 {
 }
 
 .score {
-    font-size: 2rem;
-    font-weight: bold;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.score.score-pulse {
+    animation: scorePulse 0.6s ease;
+}
+
+@keyframes scorePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); color: #ff6b6b; text-shadow: 0 0 20px rgba(255, 107, 107, 0.8); }
+    100% { transform: scale(1); }
 }
 
 .game-info {
@@ -69,100 +113,248 @@ h1 {
 /* 棒球場樣式 */
 .baseball-field {
     position: relative;
-    width: 300px;
-    height: 300px;
-    margin: 0 auto;
-    background-color: #8bc34a;
+    width: 340px;
+    height: 340px;
+    margin: 10px auto;
+    background: radial-gradient(ellipse at 50% 65%, #5fad30 0%, #4a9225 30%, #3d7a1f 60%, #2d6118 100%);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow:
+        0 0 50px rgba(80, 180, 40, 0.35),
+        0 0 100px rgba(40, 120, 20, 0.15),
+        inset 0 0 60px rgba(0, 0, 0, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
 }
 
+/* 草地紋理 */
+.field-grass-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 12px,
+        rgba(255, 255, 255, 0.03) 12px,
+        rgba(255, 255, 255, 0.03) 24px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 內野泥土區 */
+.infield-dirt {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(180, 140, 80, 0.35) 0%, rgba(160, 120, 60, 0.15) 60%, transparent 100%);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -46%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* SVG 壘包路徑 */
+.base-paths {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* 投手丘 */
+.pitcher-mound {
+    position: absolute;
+    width: 18px;
+    height: 8px;
+    background: linear-gradient(to bottom, #d4b896, #b89a70);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -30%);
+    box-shadow: 0 0 10px rgba(200, 170, 120, 0.4);
+    z-index: 3;
+}
+
+/* 本壘 */
 .home-plate {
     position: absolute;
     bottom: 30px;
-    width: 25px;
-    height: 25px;
-    background-color: white;
-    transform: rotate(45deg);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
 }
 
+.home-plate-shape {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 50%, #ffffff 100%);
+    transform: rotate(45deg);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(200, 200, 200, 0.6);
+}
+
+/* 壘包 */
 .base {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: white;
-    border: 1px solid #666;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.base-diamond {
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #ffffff 0%, #e8e8e8 50%, #ffffff 100%);
+    transform: rotate(45deg);
+    border: 2px solid rgba(180, 180, 180, 0.6);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.base-label {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.base.base-occupied .base-diamond {
+    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #ffd700 100%);
+    border-color: rgba(255, 180, 0, 0.8);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 40px rgba(255, 215, 0, 0.4);
+    animation: baseGlow 1.5s ease-in-out infinite alternate;
+}
+
+.base.base-occupied .base-label {
+    color: #ffd700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+}
+
+@keyframes baseGlow {
+    0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.3); }
+    100% { box-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 50px rgba(255, 215, 0, 0.5); }
 }
 
 #first-base {
-    right: 80px;
-    top: 150px;
+    right: 55px;
+    top: 140px;
 }
 
 #second-base {
-    top: 50px;
+    top: 38px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 #third-base {
-    left: 80px;
-    top: 150px;
+    left: 55px;
+    top: 140px;
 }
 
 /* 跑者樣式 */
 .runner {
     position: absolute;
-    width: 15px;
-    height: 15px;
-    background-color: red;
-    border-radius: 50%;
-    z-index: 2;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.runner-icon {
+    font-size: 20px;
+    filter: drop-shadow(0 0 6px rgba(255, 100, 50, 0.8)) drop-shadow(0 0 12px rgba(255, 50, 0, 0.4));
+    animation: runnerBounce 1s ease-in-out infinite;
+}
+
+@keyframes runnerBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-3px) scale(1.1); }
 }
 
 #runner-home {
-    bottom: 35px;
+    bottom: 32px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 #runner-first {
-    right: 65px;
-    top: 150px;
+    right: 42px;
+    top: 138px;
 }
 
 #runner-second {
-    top: 35px;
+    top: 28px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 #runner-third {
-    left: 65px;
-    top: 150px;
+    left: 42px;
+    top: 138px;
+}
+
+/* 動畫跑者 */
+.animated-runner {
+    position: absolute;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    will-change: left, top;
+}
+
+.animated-runner .runner-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 0 8px rgba(255, 200, 50, 0.9)) drop-shadow(0 0 16px rgba(255, 100, 0, 0.5));
+}
+
+/* 得分消失特效 */
+.runner-score-fade {
+    animation: runnerScoreFade 0.4s ease-out forwards;
+}
+
+@keyframes runnerScoreFade {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -80%) scale(1.5); opacity: 0.8; }
+    100% { transform: translate(-50%, -120%) scale(0.5); opacity: 0; }
 }
 
 /* 得分特效樣式 */
 .score-effect {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(41, 128, 185, 0.9); /* 藍色底色，更專業清爽 */
-    color: #ffffff; /* 白色文字，增加對比度 */
-    font-size: 2.5rem; /* 增大文字尺寸 */
-    font-weight: bold;
-    padding: 25px 40px; /* 增加內邊距 */
-    border-radius: 15px; /* 增大圓角 */
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.97), rgba(255, 165, 0, 0.97));
+    color: #1a1a2e;
+    font-size: 2.5rem;
+    font-weight: 900;
+    padding: 25px 40px;
+    border-radius: 16px;
     text-align: center;
-    box-shadow: 0 0 30px rgba(52, 152, 219, 0.8); /* 藍色系陰影 */
-    z-index: 10;
-    animation: scoreEffect 3s ease-in-out; /* 延長動畫時間從 1.5s 到 3s */
-    width: 80%; /* 設置最大寬度 */
-    max-width: 450px; /* 限制最大寬度 */
-    border: 3px solid #ffffff; /* 添加白色邊框增加視覺效果 */
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.7), 0 0 120px rgba(255, 165, 0, 0.35);
+    z-index: 10000;
+    animation: scoreEffect 3s ease-in-out;
+    width: 80%;
+    max-width: 450px;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    pointer-events: none;
 }
 
 @keyframes scoreEffect {
@@ -188,17 +380,19 @@ h1 {
 .question-area {
     margin-top: 20px;
     padding: 20px;
-    background-color: #f7f9fc;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+    background: rgba(20, 35, 70, 0.7);
+    border-radius: 12px;
+    border: 1px solid rgba(100, 150, 255, 0.15);
+    backdrop-filter: blur(6px);
 }
 
 .question-type {
     font-weight: bold;
-    color: #1a3a70;
+    color: #ffd700;
     margin-bottom: 15px;
     font-size: 1.6rem;
     text-align: center;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
 .question-text {
@@ -206,21 +400,21 @@ h1 {
     font-size: 1.5rem;
     margin-bottom: 20px;
     padding: 15px;
-    background-color: white;
-    border-radius: 5px;
-    border: 1px solid #eee;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(100, 150, 255, 0.15);
     line-height: 1.5;
 }
 
 #question-content {
-    color: #0066cc; /* 藍色文字 */
-    font-weight: 1000; /* 稍微加粗一點 */
+    color: #87ceeb;
+    font-weight: 700;
 }
 
 .timer {
     font-weight: bold;
     margin-bottom: 15px;
-    color: #e74c3c;
+    color: #ff6b6b;
     font-size: 1.3rem;
     text-align: center;
 }
@@ -229,27 +423,49 @@ h1 {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: 40px; /* 增加間距從 20px 到 40px */
+    gap: 40px;
     margin-top: 20px;
 }
 
 .action-button {
     padding: 15px 30px;
     font-size: 1.3rem;
-    background-color: #2980b9;
+    background: linear-gradient(135deg, #2980b9, #3498db);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(41, 128, 185, 0.4);
+    font-weight: 700;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-button:hover::before {
+    left: 100%;
 }
 
 .action-button:hover {
-    background-color: #3498db;
+    background: linear-gradient(135deg, #3498db, #5dade2);
+    box-shadow: 0 6px 25px rgba(52, 152, 219, 0.6);
+    transform: translateY(-2px);
 }
 
 .action-button.active {
-    background-color: #1c638f;
+    background: linear-gradient(135deg, #1c638f, #2471a3);
     transform: scale(0.98);
 }
 
@@ -257,36 +473,45 @@ h1 {
     padding: 12px 25px;
     font-size: 1.2rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
 }
 
 .correct {
-    background-color: #27ae60;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
     color: white;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
 }
 
 .correct:hover {
-    background-color: #2ecc71;
+    background: linear-gradient(135deg, #2ecc71, #58d68d);
+    box-shadow: 0 6px 25px rgba(46, 204, 113, 0.6);
+    transform: translateY(-2px);
 }
 
 .correct.active {
-    background-color: #1a7d44;
+    background: linear-gradient(135deg, #1a7d44, #229954);
     transform: scale(0.98);
 }
 
 .wrong {
-    background-color: #e74c3c;
+    background: linear-gradient(135deg, #e74c3c, #f44336);
     color: white;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
 }
 
 .wrong:hover {
-    background-color: #f44336;
+    background: linear-gradient(135deg, #f44336, #ef5350);
+    box-shadow: 0 6px 25px rgba(244, 67, 54, 0.6);
+    transform: translateY(-2px);
 }
 
 .wrong.active {
-    background-color: #c0392b;
+    background: linear-gradient(135deg, #c0392b, #e53935);
     transform: scale(0.98);
 }
 
@@ -307,20 +532,30 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
-    background-color: white;
+    background: linear-gradient(135deg, #0f1935, #1a2a55);
+    color: #e0e6f0;
     padding: 30px;
-    border-radius: 10px;
+    border-radius: 16px;
     width: 80%;
     max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 50, 150, 0.4), 0 0 60px rgba(0, 100, 255, 0.1);
+    border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.modal-content h2 {
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .settings-form {
@@ -341,16 +576,32 @@ h1 {
 .setting-item input[type="number"],
 .setting-item select {
     padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
+    border-radius: 6px;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0e6f0;
+}
+
+.setting-item input[type="text"] {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0e6f0;
+    width: 100%;
+}
+
+.setting-item input::placeholder {
+    color: rgba(200, 210, 230, 0.4);
 }
 
 #winner-display {
     font-size: 1.5rem;
     text-align: center;
     margin: 20px 0;
-    font-weight: bold;
-    color: #1a3a70;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .final-score, .game-status {
@@ -372,12 +623,67 @@ h1 {
     }
 
     .baseball-field {
-        width: 250px;
-        height: 250px;
+        width: 280px;
+        height: 280px;
     }
 
     .buttons {
         flex-direction: column;
         align-items: center;
     }
+}
+
+/* 打擊特效 - 揮棒震動 */
+.hit-shake {
+    animation: hitShake 0.5s ease;
+}
+
+@keyframes hitShake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-6px) rotate(-0.5deg); }
+    30% { transform: translateX(6px) rotate(0.5deg); }
+    50% { transform: translateX(-4px); }
+    70% { transform: translateX(4px); }
+    90% { transform: translateX(-2px); }
+}
+
+/* 棒球場打擊閃光 */
+.hit-flash {
+    animation: hitFlash 0.6s ease;
+}
+
+@keyframes hitFlash {
+    0% { box-shadow: 0 0 50px rgba(80, 180, 40, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.25); }
+    30% { box-shadow: 0 0 80px rgba(255, 215, 0, 0.8), 0 0 120px rgba(255, 215, 0, 0.4), inset 0 0 40px rgba(255, 215, 0, 0.2); }
+    100% { box-shadow: 0 0 50px rgba(80, 180, 40, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.25); }
+}
+
+/* 答錯特效 - 紅色震動 */
+.wrong-shake {
+    animation: wrongShake 0.6s ease;
+}
+
+@keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-8px); }
+    20% { transform: translateX(8px); }
+    30% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    50% { transform: translateX(-4px); }
+    60% { transform: translateX(4px); }
+    70% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+}
+
+/* 棒球場答錯紅色閃爍 */
+.wrong-flash {
+    animation: wrongFlash 0.6s ease;
+}
+
+@keyframes wrongFlash {
+    0% { box-shadow: 0 0 50px rgba(80, 180, 40, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.25); }
+    25% { box-shadow: 0 0 60px rgba(231, 76, 60, 0.8), 0 0 100px rgba(231, 76, 60, 0.4), inset 0 0 40px rgba(231, 76, 60, 0.3); }
+    50% { box-shadow: 0 0 50px rgba(80, 180, 40, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.25); }
+    75% { box-shadow: 0 0 50px rgba(231, 76, 60, 0.6), 0 0 80px rgba(231, 76, 60, 0.3), inset 0 0 30px rgba(231, 76, 60, 0.2); }
+    100% { box-shadow: 0 0 50px rgba(80, 180, 40, 0.35), inset 0 0 60px rgba(0, 0, 0, 0.25); }
 }

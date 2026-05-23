@@ -1,5 +1,160 @@
 // 棒球查經遊戲邏輯
 
+// ===== 音效系統 (Web Audio API) =====
+const SFX = (() => {
+    let ctx;
+    function getCtx() {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        return ctx;
+    }
+
+    function playTone(freq, type, duration, vol = 0.3, delay = 0) {
+        const c = getCtx();
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, c.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(c.destination);
+        osc.start(c.currentTime + delay);
+        osc.stop(c.currentTime + delay + duration);
+    }
+
+    // 產生噪音（可自訂濾波器）
+    function playNoise(duration, vol = 0.15, filterType = 'highpass', filterFreq = 3000) {
+        const c = getCtx();
+        const bufferSize = c.sampleRate * duration;
+        const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const src = c.createBufferSource();
+        const gain = c.createGain();
+        const filter = c.createBiquadFilter();
+        filter.type = filterType;
+        filter.frequency.value = filterFreq;
+        src.buffer = buffer;
+        gain.gain.setValueAtTime(vol, c.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(c.destination);
+        src.start();
+    }
+
+    // 模擬群眾噪音（多層隨機音調）
+    function crowdNoise(baseFreqs, duration, vol, riseOrFall) {
+        const c = getCtx();
+        baseFreqs.forEach((freq, i) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            const delay = Math.random() * 0.05;
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq + Math.random() * 40, c.currentTime + delay);
+            if (riseOrFall === 'rise') {
+                osc.frequency.linearRampToValueAtTime(freq * 1.3, c.currentTime + duration * 0.6);
+            } else {
+                osc.frequency.linearRampToValueAtTime(freq * 0.7, c.currentTime + duration * 0.6);
+            }
+            gain.gain.setValueAtTime(0.001, c.currentTime);
+            gain.gain.linearRampToValueAtTime(vol, c.currentTime + duration * 0.15);
+            gain.gain.setValueAtTime(vol, c.currentTime + duration * 0.7);
+            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(c.currentTime + delay);
+            osc.stop(c.currentTime + duration);
+        });
+        // 加一層噪音模擬人聲雜訊
+        playNoise(duration, vol * 0.5, 'bandpass', riseOrFall === 'rise' ? 2000 : 600);
+    }
+
+    return {
+        // 打擊 - 球棒擊球聲（木棒撞擊 + 清脆迴響）
+        hit() {
+            const c = getCtx();
+            // 撞擊瞬間 - 短促噪音爆發
+            const impactLen = c.sampleRate * 0.06;
+            const impactBuf = c.createBuffer(1, impactLen, c.sampleRate);
+            const impactData = impactBuf.getChannelData(0);
+            for (let i = 0; i < impactLen; i++) {
+                impactData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.008));
+            }
+            const impactSrc = c.createBufferSource();
+            const impactGain = c.createGain();
+            impactSrc.buffer = impactBuf;
+            impactGain.gain.value = 0.5;
+            impactSrc.connect(impactGain);
+            impactGain.connect(c.destination);
+            impactSrc.start();
+
+            // 木棒迴響 - 中頻共鳴
+            playTone(800, 'sine', 0.08, 0.3);
+            playTone(1200, 'sine', 0.05, 0.2, 0.01);
+            // 球飛出的「鏗」聲
+            playTone(2400, 'sine', 0.04, 0.12, 0.02);
+            playTone(180, 'sine', 0.12, 0.2, 0.01);
+        },
+        // 答對 - 群眾歡呼聲
+        correct() {
+            crowdNoise([220, 280, 350, 440, 520, 600], 1.2, 0.06, 'rise');
+            // 加上高音歡呼感
+            playTone(800, 'sine', 0.3, 0.08, 0.1);
+            playTone(1000, 'sine', 0.3, 0.08, 0.2);
+            playTone(1200, 'sine', 0.4, 0.1, 0.3);
+        },
+        // 答錯 - 群眾噓聲
+        wrong() {
+            crowdNoise([150, 200, 250, 300, 180, 220], 1.0, 0.05, 'fall');
+            // 加上低沉「噓」聲（噪音為主）
+            playNoise(0.8, 0.12, 'bandpass', 4000);
+            playNoise(0.6, 0.08, 'highpass', 5000);
+        },
+        // 得分 - 歡呼 + 上行音階
+        score() {
+            crowdNoise([250, 330, 400, 500, 600], 1.5, 0.05, 'rise');
+            playTone(523, 'triangle', 0.12, 0.2);
+            playTone(659, 'triangle', 0.12, 0.2, 0.1);
+            playTone(784, 'triangle', 0.12, 0.2, 0.2);
+            playTone(1047, 'triangle', 0.3, 0.25, 0.3);
+        },
+        // 全壘打 - 號角 + 大歡呼
+        homerun() {
+            crowdNoise([200, 280, 350, 440, 520, 650, 300], 2.5, 0.06, 'rise');
+            playTone(523, 'triangle', 0.15, 0.25);
+            playTone(659, 'triangle', 0.15, 0.25, 0.12);
+            playTone(784, 'triangle', 0.15, 0.25, 0.24);
+            playTone(1047, 'triangle', 0.5, 0.3, 0.36);
+            playTone(784, 'triangle', 0.12, 0.15, 0.7);
+            playTone(1047, 'triangle', 0.6, 0.3, 0.82);
+        },
+        // 攻守交換 - 哨聲
+        switchTeam() {
+            playTone(900, 'sine', 0.15, 0.2);
+            playTone(1200, 'sine', 0.3, 0.25, 0.1);
+        },
+        // 遊戲結束 - 勝利旋律 + 歡呼
+        gameOver() {
+            crowdNoise([200, 280, 350, 440, 520, 650, 300, 400], 3.0, 0.05, 'rise');
+            playTone(523, 'triangle', 0.2, 0.25);
+            playTone(659, 'triangle', 0.2, 0.25, 0.18);
+            playTone(784, 'triangle', 0.2, 0.25, 0.36);
+            playTone(1047, 'triangle', 0.35, 0.3, 0.54);
+            playTone(784, 'triangle', 0.15, 0.15, 0.8);
+            playTone(1047, 'triangle', 0.15, 0.15, 0.95);
+            playTone(1320, 'triangle', 0.7, 0.3, 1.1);
+        },
+        // 出局 - 三振下行音 + 小噓聲
+        out() {
+            crowdNoise([200, 250, 180], 0.6, 0.03, 'fall');
+            playTone(440, 'sawtooth', 0.1, 0.12);
+            playTone(350, 'sawtooth', 0.1, 0.12, 0.1);
+            playTone(260, 'sawtooth', 0.3, 0.15, 0.2);
+        }
+    };
+})();
+
 // 遊戲狀態
 const gameState = {
     // 隊伍名稱
@@ -33,62 +188,62 @@ const gameState = {
     // 題目庫
     questions: {
         single: [
-            "1. 以色列百姓都同意遵守神的律法，並且發誓遵行嗎？(v29)",
-            "2. 百姓立誓不再將女兒嫁給外邦人，也不娶外邦人的女兒嗎？(v30)",
-            "3. 百姓同意在安息日和聖日，不從外邦人那裡買貨物嗎？(v31)",
-            "4. 他們決定每七年放棄耕種，並豁免債務嗎？(v31)",
-            "5. 百姓承諾每年奉獻三分之一舍客勒作為聖殿的使用費用嗎？(v32)",
-            "6. 百姓答應供應祭壇上的常獻祭、素祭、燔祭等嗎？(v33)",
-            "7. 他們決定每年投籤，按時將木柴送到神的殿中焚燒嗎？(v34)",
-            "8. 他們承諾將土產初熟之物和牲畜頭生的奉到殿中嗎？(v35-36)",
-            "9. 百姓說要把初熟之麥子、酒和油帶到利未人那裡嗎？(v37)",
-            "10. 百姓有說「我們必不撇棄我們神的殿」嗎？(v39)",
-            "11. 百姓願意將自己的兒子娶外邦人嗎？(v30)",
-            "12. 他們決定將十分之一交給國王作為稅收嗎？(v37)",
-            "13. 當利未人收取十分之一的時候，亞倫的兄弟中，會有一個祭司與利未人同在嗎？(v38)",
-            "14. 他們每逢七年會豁免債務嗎？(v31)",
-            "15. 他們承諾每年奉獻一舍客勒作為聖殿的使用費嗎？(v32)",
-            "16. 他們承諾每七年獻上特別的贖罪祭嗎？(v31)",
-            "17. 百姓說要把祭司的衣服當作供物奉獻嗎？(v36)",
-            "18. 他們決定將頭生的孩子獻為奴僕嗎？(v36)",
-            "19. 以色列人說不要把初熟之果子帶進聖殿嗎？(v35)",
-            "20. 他們同意撇棄神的殿，不再奉獻嗎？(v39)"
+            "1. 保羅說他是「為福音被囚的」嗎？(v1)",
+            "2. 保羅勸信徒「用愛心互相寬容」嗎？(v2)",
+            "3. 經文說用「信心」彼此聯絡嗎？(v3)",
+            "4. 經文說身體只有一個，聖靈只有一個嗎？(v4)",
+            "5. 經文提到「一主，一信，一浸」嗎？(v5)",
+            "6. 神只是超乎眾人之上，但沒有住在眾人之內嗎？(v6)",
+            "7. 我們各人蒙恩，都是照基督所量給各人的恩賜嗎？(v7)",
+            "8. 基督升上遠超諸天之上，是要「審判萬有」嗎？(v10)",
+            "9. 五種恩賜中，「牧師」和「教師」是分開算兩種的嗎？(v11)",
+            "10. 恩賜的目的包括「成全聖徒、各盡其職、建立基督的身體」嗎？(v12)",
+            "11. 保羅說我們要在「律法上」同歸於一嗎？(v13)",
+            "12. 小孩子會中了「人的詭計和欺騙的法術」嗎？(v14)",
+            "13. 經文說要用「公義」說誠實話嗎？(v15)",
+            "14. 百節各按各職是說身體靠「元首基督」聯絡的嗎？(v15-16)",
+            "15. 外邦人與神隔絕是因為「自己無知、心裡剛硬」嗎？(v18)",
+            "16. 外邦人良心喪盡後，就放縱私慾、貪行種種的污穢嗎？(v19)",
+            "17. 舊人是因「世界的引誘」漸漸變壞的嗎？(v22)",
+            "18. 新人是照著神的形像造的，有真理的仁義和聖潔嗎？(v24)",
+            "19. 信徒之所以要說實話，是因為我們是互相為「肢體」嗎？(v25)",
+            "20. 從前偷竊的人勞力做正經事，只要能養活自己就好嗎？(v28)"
         ],
         double: [
-            "21. 百姓與祭司立約，是要遵行什麼？A. 摩西的律法 B. 列王的法令 C. 亞達薛西王的命令 D. 自己的傳統 (v29)",
-            "22. 百姓立誓不可與誰通婚？A. 利未人 B. 外邦人 C. 祭司 D. 本族人 (v30)",
-            "23. 百姓在安息日決定怎麼做？A. 多做買賣 B. 出去打仗 C. 不買外邦人的貨物 D. 種田 (v31)",
-            "24. 他們每幾年要免債？A. 每三年 B. 每五年 C. 每七年 D. 每十年 (v31)",
-            "25. 百姓定規每年奉獻多少舍客勒作為聖殿費用？A. 二分之一 B. 三分之一 C. 一舍客勒 D. 十分之一 (v32)",
-            "26. 百姓承諾要供應哪些祭物？A. 常獻祭、素祭、燔祭 B. 金牛犢 C. 外邦神像 D. 新的歌詩 (v33)",
-            "27. 他們如何決定誰要送木柴？A. 輪流表決 B. 投籤 C. 祭司挑選 D. 王下命令 (v34)",
-            "28. 百姓要把什麼奉到殿中？A. 初熟的果子 B. 金銀器皿 C. 武器 D. 書卷 (v35)",
-            "29. 百姓要把頭生的牲畜奉給誰？A. 祭司 B. 君王 C. 利未人 D. 長老 (v36)",
-            "30. 百姓要將五穀、新酒和油交給誰？A. 利未人 B. 君王 C. 外邦商人 D. 士兵 (v37)",
-            "31. 利未人收了十分之一要怎麼做？A. 自己留下 B. 送到倉房 C. 拿去做買賣 D. 分給百姓 (v38)",
-            "32. 祭司亞倫的子孫要與誰一同收十分之一？A. 外邦人 B. 利未人 C. 君王 D. 文士 (v38)",
-            "33. 利未人把十分之一送到聖殿時，要送到哪裡？A. 城門 B. 聖所的倉房 C. 王宮 D. 會堂 (v38-39)",
-            "34. 倉房裡存放什麼？A. 五穀、新酒、油 B. 武器 C. 石頭 D. 衣服 (v39)",
-            "35. (單選題)最後百姓共同的決心是什麼？A. 不撇棄神的殿 B. 建更多城牆 C. 與外邦人立約 D. 出埃及 (v39)"
+            "21. 保羅說他是為誰被囚的？ A. 為主 B. 為福音 C. 為教會 D. 為律法 (v1)",
+            "22. 第2節提到的四個品格，正確順序是？ A. 謙虛、溫柔、忍耐、愛心 B. 溫柔、謙虛、忍耐、寬容 C. 謙虛、溫柔、忍耐、寬容 D. 忍耐、溫柔、謙虛、愛心 (v2)",
+            "23. 「竭力保守」的是什麼？ A. 教會的傳統 B. 聖靈所賜合而為一的心 C. 摩西的律法 D. 使徒的教訓 (v3)",
+            "24. 第4-6節總共提到幾個「一」？ A. 五個 B. 六個 C. 七個 D. 八個 (v4-6)",
+            "25. 第8節「所以經上說」引用的是哪裡的經文概念？ A. 創世記 B. 詩篇 C. 以賽亞書 D. 出埃及記 (v8)",
+            "26. 「那降下的」是指誰？ A. 聖靈 B. 天使 C. 基督 D. 先知 (v9-10)",
+            "27. 以下哪一個不是第11節提到的恩賜？ A. 使徒 B. 傳福音的 C. 長老 D. 教師 (v11)",
+            "28. 「在真道上同歸於一」之後，接著提到什麼？ A. 建立教會 B. 認識神的兒子 C. 遵守律法 D. 傳揚福音 (v13)",
+            "29. 「異教之風」使人怎樣？ A. 更加堅定 B. 飄來飄去隨從異端 C. 回歸真理 D. 離開教會 (v14)",
+            "30. 身體在愛中建立自己，靠的是什麼？ A. 各體的功用彼此相助 B. 領袖的命令 C. 個人的努力 D. 外在的壓力 (v16)",
+            "31. 外邦人與神的生命隔絕的原因是？ A. 神不揀選他們 B. 因自己無知、心裡剛硬 C. 因貧窮 D. 因戰爭 (v18)",
+            "32. 第23節說要改換一新的是什麼？ A. 行為 B. 心志 C. 外貌 D. 環境 (v23)",
+            "33. 不可給誰留地步？ A. 仇敵 B. 罪人 C. 魔鬼 D. 外邦人 (v27)",
+            "34. 信徒受了聖靈的什麼，等候得贖的日子？ A. 恩膏 B. 印記 C. 能力 D. 感動 (v30)",
+            "35. 第31節列出要除掉的惡行，以下哪個不在其中？ A. 苦毒 B. 嚷鬧 C. 毀謗 D. 嫉妒 (v31)"
         ],
         triple: [
-            "36. 百姓立誓的主要內容有哪些？A. 遵守律法 B. 不與外邦人通婚 C. 守安息日 D. 擴張疆界 (v29-31)",
-            "37. 百姓同意的安息日規定是什麼？A. 不做工 B. 不買賣 C. 豁免債務 D. 建造新城 (v31)",
-            "38. 聖殿需要哪些經費支持？A. 燔祭 B. 素祭 C. 守節 D. 軍隊 (v32-33)",
-            "39. 百姓要供應的東西有哪些？A. 初熟的果子 B. 頭生的牲畜 C. 新酒 D. 兵器 (v35-37)",
-            "40. 百姓要把什麼帶到祭司的倉房？A. 十分之一 B. 五穀 C. 新酒 D. 外邦貨 (v37-39)",
-            "41. 參與管理倉房的有哪些人？A. 祭司 B. 利未人 C. 歌唱的 D. 守門的 (v38-39)",
-            "42. 百姓對「十分之一」的規定是什麼？A. 要交給利未人 B. 利未人再交十分之一 C. 全數留下 D. 部分給祭司 (v37-38)",
-            "43. 百姓承諾獻上的包括哪些？A. 麥子 B. 酒 C. 油 D. 武器 (v35-37)",
-            "44. 百姓定規按時送木柴是為了什麼？A. 保證祭壇常有火 B. 按律法要求 C. 預防外敵 D. 供應燔祭 (v34)",
-            "45. 百姓最後的總結承諾有哪些？A. 不撇棄神的殿 B. 供應倉房 C. 與外邦人結盟 D. 照顧祭司和利未人 (v39)"
+            "36. 第4-6節提到的七個「一」包括哪些？ A. 一個身體 B. 一個聖靈 C. 一個指望 D. 一個教會 (v4-6)",
+            "37. 基督「降下又升上」的目的是什麼？ A. 充滿萬有 B. 賜下恩賜 C. 擄掠仇敵 D. 審判世人 (v8-10)",
+            "38. 第12節提到恩賜的三重目的是？ A. 成全聖徒 B. 各盡其職 C. 建立基督的身體 D. 擴張教會版圖 (v12)",
+            "39. 以下哪些是v14提到「作小孩子」的危險？ A. 中了人的詭計 B. 被欺騙的法術影響 C. 被異教之風搖動 D. 失去救恩 (v14)",
+            "40. 第16節中身體增長需要哪些條件？ A. 靠元首基督聯絡 B. 百節各按各職 C. 各體功用彼此相助 D. 遵守十誡 (v16)",
+            "41. 外邦人的生命光景包括哪些描述？ A. 存虛妄的心 B. 心地昏昧 C. 良心喪盡 D. 凡事忍耐 (v17-19)",
+            "42. 「穿上新人」的特質有哪些？ A. 真理 B. 仁義 C. 聖潔 D. 智慧 (v24)",
+            "43. 保羅在v25-29勸勉信徒實踐哪些事？ A. 棄絕謊言說實話 B. 生氣不要犯罪 C. 勞力做正經事分給缺少的人 D. 每日禁食禱告 (v25-29)",
+            "44. 第31節列出要除掉的有哪些？ A. 苦毒 B. 忿怒 C. 嚷鬧 D. 憂愁 (v31)",
+            "45. 第32節要求信徒做到哪些？ A. 以恩慈相待 B. 存憐憫的心 C. 彼此饒恕 D. 彼此論斷 (v32)"
         ],
         homerun: [
-            "46. 誰負責收取百姓的十分之一？(V38)",
-            "47. 在安息日帶貨物或是糧食來必怎麼樣?？(v31)",
-            "48. 要將頭胎的兒子和什麼東西都要奉到神的殿？(v.36)",
-            "49. 百姓定規每年奉獻多少舍客勒作為聖殿使用費？(v32)",
-            "50. 最後百姓的總結承諾是什麼？(v39)"
+            "46. 請按順序說出第4-6節提到的七個「一」。(v4-6)",
+            "47. 請說明第11節基督所賜的五種恩賜(他所賜的，.....)？(v11-12)",
+            "48. 請比較「舊人」和「新人」：舊人因什麼漸漸變壞？新人是照什麼造的、有什麼特質？中間還要做什麼？(v22-24)",
+            "49. 第25-32節保羅給了哪些具體的生活實踐教導？請至少說出五項。(v25-32)",
+            "50. 第16節如何描述基督身體的運作方式？請完整說明。(v16)"
         ]
     },
     // 當前題目
@@ -255,6 +410,11 @@ function updateBases() {
     elements.runnerFirst.style.display = gameState.bases.first ? 'block' : 'none';
     elements.runnerSecond.style.display = gameState.bases.second ? 'block' : 'none';
     elements.runnerThird.style.display = gameState.bases.third ? 'block' : 'none';
+
+    // 壘包高亮
+    elements.firstBase.classList.toggle('base-occupied', gameState.bases.first);
+    elements.secondBase.classList.toggle('base-occupied', gameState.bases.second);
+    elements.thirdBase.classList.toggle('base-occupied', gameState.bases.third);
 }
 
 // 設置事件監聽器
@@ -406,6 +566,10 @@ function startGame() {
 function handleHit() {
     if (!gameState.inProgress) return;
 
+    // 打擊音效 + 特效
+    SFX.hit();
+    fireHitEffect();
+
     // 抽取隨機題目
     getRandomQuestion();
 
@@ -461,6 +625,9 @@ function getRandomQuestion() {
     // 將此題目標記為已使用
     gameState.usedQuestions.push(selectedQuestion.id);
 
+    // 立即保存，避免關閉瀏覽器後題目重複
+    saveGameState();
+
     // 設置當前題目
     gameState.currentQuestion = selectedQuestion.question;
     gameState.currentQuestionType = selectedQuestion.type;
@@ -503,27 +670,47 @@ function showQuestion() {
 // 處理正確答案
 function handleCorrectAnswer() {
 
+    // 答對音效
+    SFX.correct();
+
+    // 記錄推進前的壘包狀態
+    const beforeBases = { ...gameState.bases };
+
     // 根據題目類型推進壘包
-    advanceBases(gameState.currentQuestionType);
+    const totalRuns = advanceBases(gameState.currentQuestionType);
 
-    // 重置題目區域
-    resetQuestionArea();
+    // 隱藏答案按鈕避免重複點擊
+    elements.answerButtons.style.display = 'none';
 
-    // 更新UI
-    updateUI();
-
-    // 保存遊戲狀態
-    saveGameState();
+    // 播放跑壘動畫，動畫結束後再顯示得分特效和更新 UI
+    animateRunners(beforeBases, gameState.currentQuestionType, () => {
+        // 跑壘動畫結束後才顯示得分特效
+        if (totalRuns > 0) {
+            const team = gameState.currentTeam;
+            showScoreEffect(team, totalRuns);
+        }
+        // 重置題目區域
+        resetQuestionArea();
+        // 更新UI
+        updateUI();
+        // 保存遊戲狀態
+        saveGameState();
+    });
 }
 
 // 處理錯誤答案
 function handleWrongAnswer() {
+
+    // 答錯音效 + 特效
+    SFX.wrong();
+    fireWrongEffect();
 
     // 增加出局數
     gameState.outs++;
 
     // 檢查是否需要換邊
     if (gameState.outs >= 3) {
+        SFX.out();
         switchTeams();
     }
 
@@ -551,89 +738,314 @@ function resetQuestionArea() {
     elements.questionDifficulty.textContent = '';
 }
 
-// 推進壘包
-function advanceBases(hitType) {
-    // 記錄推進前的分數，用於計算得了多少分
-    let beforeScoreTeam1 = gameState.scores.team1;
-    let beforeScoreTeam2 = gameState.scores.team2;
-    let totalRuns = 0;
+// ===== 跑壘動畫系統 =====
 
-    // 根據打擊類型決定推進壘包的邏輯
+// 壘包座標 (相對於 .baseball-field 的位置，以百分比表示)
+const BASE_POSITIONS = {
+    home:   { x: 50, y: 91 },   // 本壘
+    first:  { x: 83, y: 43 },   // 一壘
+    second: { x: 50, y: 10 },   // 二壘
+    third:  { x: 17, y: 43 },   // 三壘
+    score:  { x: 50, y: 91 }    // 得分（回本壘）
+};
+
+// 建立一個動畫跑者 DOM 元素
+function createAnimatedRunner() {
+    const el = document.createElement('div');
+    el.className = 'animated-runner';
+    el.innerHTML = '<span class="runner-icon">⚾</span>';
+    return el;
+}
+
+// 計算兩壘之間的路徑點（走弧線）
+function getPathPoints(from, to, steps) {
+    const points = [];
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        // 線性插值 + 弧度偏移讓跑壘走弧線
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        // 向內側偏移（讓跑壘路徑看起來更自然）
+        const offsetX = (50 - midX) * 0.3 * Math.sin(t * Math.PI);
+        const offsetY = (50 - midY) * 0.3 * Math.sin(t * Math.PI);
+        points.push({
+            x: from.x + (to.x - from.x) * t + offsetX * Math.sin(t * Math.PI),
+            y: from.y + (to.y - from.y) * t + offsetY * Math.sin(t * Math.PI)
+        });
+    }
+    return points;
+}
+
+// 播放單一跑者從 fromBase 到 toBase 的動畫
+function animateOneRunner(field, fromBase, toBase, duration) {
+    return new Promise(resolve => {
+        const runner = createAnimatedRunner();
+        field.appendChild(runner);
+
+        const from = BASE_POSITIONS[fromBase];
+        const to = BASE_POSITIONS[toBase];
+
+        // 設定初始位置
+        runner.style.left = from.x + '%';
+        runner.style.top = from.y + '%';
+
+        const startTime = performance.now();
+
+        function step(now) {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            // ease-out 曲線
+            const ease = 1 - Math.pow(1 - t, 3);
+
+            // 弧線偏移
+            const midX = (50 - (from.x + to.x) / 2) * 0.25;
+            const midY = (50 - (from.y + to.y) / 2) * 0.25;
+            const arcX = midX * Math.sin(t * Math.PI);
+            const arcY = midY * Math.sin(t * Math.PI);
+
+            const currentX = from.x + (to.x - from.x) * ease + arcX;
+            const currentY = from.y + (to.y - from.y) * ease + arcY;
+
+            runner.style.left = currentX + '%';
+            runner.style.top = currentY + '%';
+
+            // 跑動時的縮放彈跳效果
+            const bounce = 1 + 0.15 * Math.sin(t * Math.PI * 4);
+            runner.querySelector('.runner-icon').style.transform = `scale(${bounce})`;
+
+            if (t < 1) {
+                requestAnimationFrame(step);
+            } else {
+                // 動畫結束，得分的跑者加一個消失特效
+                if (toBase === 'score') {
+                    runner.classList.add('runner-score-fade');
+                    setTimeout(() => runner.remove(), 400);
+                } else {
+                    runner.remove();
+                }
+                resolve();
+            }
+        }
+        requestAnimationFrame(step);
+    });
+}
+
+// 計算每個跑者的移動路徑（強迫推進邏輯）
+function getRunnerMoves(beforeBases, hitType) {
+    const moves = [];
+    const old = beforeBases;
+
     switch (hitType) {
         case 'homerun':
-            // 全壘打：所有壘上跑者得分，打者得分
-            if (gameState.bases.third) {
-                totalRuns++;
-                gameState.bases.third = false;
-            }
-            if (gameState.bases.second) {
-                totalRuns++;
-                gameState.bases.second = false;
-            }
-            if (gameState.bases.first) {
-                totalRuns++;
-                gameState.bases.first = false;
-            }
-            // 打者本人也得分
-            totalRuns++;
+            if (old.third) moves.push({ from: 'third', to: 'score' });
+            if (old.second) moves.push({ from: 'second', to: 'score' });
+            if (old.first) moves.push({ from: 'first', to: 'score' });
+            moves.push({ from: 'home', to: 'score' });
             break;
 
         case 'triple':
-            // 三壘打：所有壘上跑者得分，打者到三壘
-            if (gameState.bases.third) {
-                totalRuns++;
+            if (old.third) moves.push({ from: 'third', to: 'score' });
+            if (old.second) moves.push({ from: 'second', to: 'score' });
+            if (old.first) moves.push({ from: 'first', to: 'score' });
+            moves.push({ from: 'home', to: 'third' });
+            break;
+
+        case 'double':
+            // 二壘跑者 → 得分（打者佔二壘，強迫）
+            if (old.second) moves.push({ from: 'second', to: 'score' });
+            // 一壘跑者 → 三壘（打者經過一壘，強迫）
+            if (old.first) moves.push({ from: 'first', to: 'third' });
+            // 三壘跑者 → 得分（只有一壘有人被擢過來才推進）
+            if (old.third && old.first) moves.push({ from: 'third', to: 'score' });
+            // 打者 → 二壘
+            moves.push({ from: 'home', to: 'second' });
+            break;
+
+        case 'single':
+            {
+                const force2 = old.first;                // 一壘有人才擢二壘
+                const force3 = old.first && old.second;  // 一二壘都有人才擢三壘
+
+                // 三壘 → 得分（鏈式強迫）
+                if (old.third && force3) moves.push({ from: 'third', to: 'score' });
+                // 二壘 → 三壘（一壘有人才推進）
+                if (old.second && force2) moves.push({ from: 'second', to: 'third' });
+                // 一壘 → 二壘（打者佔一壘，強迫）
+                if (old.first) moves.push({ from: 'first', to: 'second' });
+                // 打者 → 一壘
+                moves.push({ from: 'home', to: 'first' });
             }
-            if (gameState.bases.second) {
-                totalRuns++;
+            break;
+    }
+    return moves;
+}
+
+// 多壘跑動 — 需要拆成多段動畫（例如全壘打：home→1st→2nd→3rd→home）
+function getMultiLegPath(from, to, hitType) {
+    const order = ['home', 'first', 'second', 'third', 'score'];
+    const startIdx = order.indexOf(from);
+    let endIdx = order.indexOf(to);
+    if (endIdx <= startIdx) endIdx = order.length - 1; // score
+
+    const legs = [];
+    for (let i = startIdx; i < endIdx; i++) {
+        legs.push({ from: order[i], to: order[i + 1] });
+    }
+    return legs;
+}
+
+// 播放一個跑者的多段跑壘
+async function animateMultiLeg(field, from, to, totalDuration) {
+    const legs = getMultiLegPath(from, to);
+    const legDuration = totalDuration / legs.length;
+
+    const runner = createAnimatedRunner();
+    field.appendChild(runner);
+
+    const startPos = BASE_POSITIONS[from];
+    runner.style.left = startPos.x + '%';
+    runner.style.top = startPos.y + '%';
+
+    for (const leg of legs) {
+        await animateLeg(runner, BASE_POSITIONS[leg.from], BASE_POSITIONS[leg.to], legDuration);
+    }
+
+    // 結束處理
+    if (to === 'score') {
+        runner.classList.add('runner-score-fade');
+        setTimeout(() => runner.remove(), 400);
+    } else {
+        runner.remove();
+    }
+}
+
+// 播放一段跑壘（直接移動 DOM 元素）
+function animateLeg(runner, from, to, duration) {
+    return new Promise(resolve => {
+        const startTime = performance.now();
+        function step(now) {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - t, 3);
+
+            const midX = (50 - (from.x + to.x) / 2) * 0.2;
+            const midY = (50 - (from.y + to.y) / 2) * 0.2;
+            const arcX = midX * Math.sin(t * Math.PI);
+            const arcY = midY * Math.sin(t * Math.PI);
+
+            runner.style.left = (from.x + (to.x - from.x) * ease + arcX) + '%';
+            runner.style.top = (from.y + (to.y - from.y) * ease + arcY) + '%';
+
+            const bounce = 1 + 0.12 * Math.sin(t * Math.PI * 5);
+            runner.querySelector('.runner-icon').style.transform = `scale(${bounce})`;
+
+            if (t < 1) {
+                requestAnimationFrame(step);
+            } else {
+                resolve();
             }
-            if (gameState.bases.first) {
-                totalRuns++;
-            }
-            // 打者到三壘
+        }
+        requestAnimationFrame(step);
+    });
+}
+
+// 主要動畫控制函數
+function animateRunners(beforeBases, hitType, onComplete) {
+    const field = document.querySelector('.baseball-field');
+    const moves = getRunnerMoves(beforeBases, hitType);
+
+    if (moves.length === 0) {
+        onComplete();
+        return;
+    }
+
+    // 先隱藏所有靜態跑者（動畫跑者會取代）
+    elements.runnerFirst.style.display = 'none';
+    elements.runnerSecond.style.display = 'none';
+    elements.runnerThird.style.display = 'none';
+    elements.runnerHome.style.display = 'none';
+
+    // 計算總時間（壘數越多越長）
+    const baseDuration = 400; // 每壘 400ms
+
+    // 所有跑者同時跑
+    const animations = moves.map(move => {
+        const legs = getMultiLegPath(move.from, move.to);
+        const totalDuration = legs.length * baseDuration;
+        return animateMultiLeg(field, move.from, move.to, totalDuration);
+    });
+
+    Promise.all(animations).then(() => {
+        onComplete();
+    });
+}
+
+// 推進壘包
+function advanceBases(hitType) {
+    let totalRuns = 0;
+
+    // 記錄推進前的壘包狀態
+    const old = { ...gameState.bases };
+
+    switch (hitType) {
+        case 'homerun':
+            // 全壘打：所有壘上跑者得分，打者得分
+            if (old.third) totalRuns++;
+            if (old.second) totalRuns++;
+            if (old.first) totalRuns++;
+            totalRuns++; // 打者
+            gameState.bases = { first: false, second: false, third: false };
+            break;
+
+        case 'triple':
+            // 三壘打：打者到三壘，經過所有壘包，全部強迫推進
+            if (old.third) totalRuns++;
+            if (old.second) totalRuns++;
+            if (old.first) totalRuns++;
             gameState.bases = { first: false, second: false, third: true };
             break;
 
         case 'double':
-            // 二壘打：二三壘跑者得分，一壘跑者到三壘，打者到二壘
-            if (gameState.bases.third) {
-                totalRuns++;
-            }
-            if (gameState.bases.second) {
-                totalRuns++;
-            }
-            // 一壘跑者到三壘
-            gameState.bases.third = gameState.bases.first;
-            // 打者到二壘
+            // 二壘打：打者到二壘
+            // 二壘跑者 → 得分（打者佔二壘，強迫）
+            if (old.second) totalRuns++;
+            // 一壘跑者 → 三壘（打者經過一壘，強迫）
+            // 三壘跑者 → 得分（只有一壘有人被擠過來才需推進）
+            if (old.third && old.first) totalRuns++;
+            else if (old.third && !old.first) { /* 三壘不動 */ }
+            gameState.bases.third = old.first ? true : old.third;
             gameState.bases.second = true;
             gameState.bases.first = false;
             break;
 
         case 'single':
-            // 安打：三壘跑者得分，一二壘跑者各進一個壘，打者到一壘
-            if (gameState.bases.third) {
-                totalRuns++;
+            // 安打：打者到一壘，鏈式強迫推進
+            // 一壘 → 二壘（打者佔一壘，強迫）
+            // 二壘 → 三壘（只有一壘有人被擠過來才推進）
+            // 三壘 → 得分（只有一壘和二壘都有人才推進）
+            {
+                const force1 = true;           // 打者佔一壘，一壘永遠被迫
+                const force2 = old.first;       // 一壘有人才能擠二壘
+                const force3 = old.first && old.second; // 一二壘都有人才能擢三壘
+
+                if (old.third && force3) totalRuns++;
+                gameState.bases.third = (old.second && force2) ? true : (old.third && !force3 ? true : false);
+                gameState.bases.second = (old.first && force1) ? true : (old.second && !force2 ? true : false);
+                gameState.bases.first = true;
             }
-            // 二壘跑者到三壘
-            gameState.bases.third = gameState.bases.second;
-            // 一壘跑者到二壘
-            gameState.bases.second = gameState.bases.first;
-            // 打者到一壘
-            gameState.bases.first = true;
             break;
     }
 
-    // 一次性增加分數
+    // 一次性增加分數（不顯示特效，由動畫結束後觸發）
     if (totalRuns > 0) {
         if (gameState.currentTeam === 1) {
             gameState.scores.team1 += totalRuns;
-            // 顯示得分特效
-            showScoreEffect(1, totalRuns);
         } else {
             gameState.scores.team2 += totalRuns;
-            // 顯示得分特效
-            showScoreEffect(2, totalRuns);
         }
     }
+
+    return totalRuns;
 }
 
 // 增加分數 (單個得分情況使用)
@@ -659,6 +1071,22 @@ function showScoreEffect(team, points) {
     // 顯示特效元素
     elements.scoreEffect.style.display = 'block';
 
+    // 分數數字跳動動畫
+    const scoreEl = team === 1 ? elements.team1Score : elements.team2Score;
+    scoreEl.classList.remove('score-pulse');
+    void scoreEl.offsetWidth;
+    scoreEl.classList.add('score-pulse');
+
+    // 得分音效
+    if (points >= 4) {
+        SFX.homerun();
+    } else {
+        SFX.score();
+    }
+
+    // 發射彩紙特效
+    fireConfetti(points);
+
     // 添加動畫結束監聽器，在動畫結束後隱藏特效
     const handleAnimationEnd = () => {
         elements.scoreEffect.style.display = 'none';
@@ -671,6 +1099,128 @@ function showScoreEffect(team, points) {
     elements.scoreEffect.style.animation = 'none';
     elements.scoreEffect.offsetHeight; // 觸發重排，使動畫能夠重新開始
     elements.scoreEffect.style.animation = 'scoreEffect 3s ease-in-out'; // 更新為 3 秒
+}
+
+// 彩紙特效
+function fireConfetti(points) {
+    if (typeof confetti !== 'function') return;
+
+    const count = Math.min(points * 80, 300);
+    const defaults = { origin: { y: 0.7 }, zIndex: 9999 };
+
+    // 基本彩紙
+    confetti({
+        ...defaults,
+        particleCount: count,
+        spread: 80,
+        colors: ['#ffd700', '#ff6b6b', '#87ceeb', '#2ecc71', '#ffffff']
+    });
+
+    // 全壘打時加碼煙火效果
+    if (points >= 4) {
+        setTimeout(() => {
+            confetti({ ...defaults, particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.65 } });
+            confetti({ ...defaults, particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.65 } });
+        }, 300);
+        setTimeout(() => {
+            confetti({
+                ...defaults,
+                particleCount: 150,
+                spread: 160,
+                startVelocity: 45,
+                scalar: 1.2,
+                shapes: ['star'],
+                colors: ['#ffd700', '#ff4500', '#ff69b4']
+            });
+        }, 700);
+    }
+}
+
+// 打擊特效 - 揮棒震動 + 星光閃爍
+function fireHitEffect() {
+    // 畫面震動
+    const container = document.querySelector('.game-container');
+    container.classList.add('hit-shake');
+    setTimeout(() => container.classList.remove('hit-shake'), 500);
+
+    // 棒球場閃光
+    const field = document.querySelector('.baseball-field');
+    field.classList.add('hit-flash');
+    setTimeout(() => field.classList.remove('hit-flash'), 600);
+
+    // 小型星光粒子
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 15,
+            spread: 40,
+            startVelocity: 20,
+            origin: { x: 0.5, y: 0.5 },
+            colors: ['#ffd700', '#ffffff', '#87ceeb'],
+            scalar: 0.6,
+            gravity: 0.8,
+            ticks: 80,
+            zIndex: 9999
+        });
+    }
+}
+
+// 答錯特效 - 紅色閃爍 + 震動
+function fireWrongEffect() {
+    // 畫面紅色閃爍
+    const container = document.querySelector('.game-container');
+    container.classList.add('wrong-shake');
+    setTimeout(() => container.classList.remove('wrong-shake'), 600);
+
+    // 棒球場紅色閃爍
+    const field = document.querySelector('.baseball-field');
+    field.classList.add('wrong-flash');
+    setTimeout(() => field.classList.remove('wrong-flash'), 600);
+
+    // 紅色碎片噴出
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 30,
+            spread: 70,
+            startVelocity: 15,
+            origin: { x: 0.5, y: 0.6 },
+            colors: ['#e74c3c', '#c0392b', '#ff6b6b', '#333333'],
+            scalar: 0.7,
+            gravity: 1.2,
+            ticks: 60,
+            zIndex: 9999
+        });
+    }
+}
+
+// 遊戲結束慶祝彩紙
+function fireGameOverConfetti() {
+    if (typeof confetti !== 'function') return;
+
+    const duration = 3000;
+    const end = Date.now() + duration;
+    const colors = ['#ffd700', '#ff6b6b', '#87ceeb', '#2ecc71', '#ff69b4', '#ffffff'];
+
+    (function frame() {
+        confetti({
+            particleCount: 4,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: colors,
+            zIndex: 9999
+        });
+        confetti({
+            particleCount: 4,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: colors,
+            zIndex: 9999
+        });
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    })();
 }
 
 // 顯示攻守交換提示
@@ -718,7 +1268,8 @@ function switchTeams() {
         }
     }
 
-    // 顯示攻守交換提示
+    // 攻守交換音效 + 提示
+    SFX.switchTeam();
     showTeamSwitchEffect(gameState.currentTeam);
 
     // 更新 UI
@@ -752,6 +1303,10 @@ function endGame() {
 
     // 顯示遊戲結束對話框
     elements.gameOverModal.style.display = 'flex';
+
+    // 遊戲結束音效 + 慶祝彩紙
+    SFX.gameOver();
+    fireGameOverConfetti();
 
     // 保存遊戲狀態
     saveGameState();

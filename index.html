@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>棒球查經</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- tsParticles 背景 -->
+    <div id="tsparticles"></div>
+
     <header>
         <h1>棒球查經</h1>
     </header>
@@ -42,26 +49,45 @@
 
         <!-- 棒球場區域 -->
         <div class="baseball-field">
-            <div class="home-plate" id="home"></div>
-            <div class="base" id="first-base"></div>
-            <div class="base" id="second-base"></div>
-            <div class="base" id="third-base"></div>
+            <!-- 外野草地紋理 -->
+            <div class="field-grass-pattern"></div>
+            <!-- 內野泥土區 -->
+            <div class="infield-dirt"></div>
+            <!-- 壘包路徑線 (SVG) -->
+            <svg class="base-paths" viewBox="0 0 300 300">
+                <!-- 外圈發光線 -->
+                <polygon points="150,52 218,150 150,248 82,150" fill="none" stroke="rgba(255,215,0,0.12)" stroke-width="18" stroke-linejoin="round"/>
+                <!-- 壘包路徑 -->
+                <polygon points="150,52 218,150 150,248 82,150" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linejoin="round" stroke-dasharray="8,4"/>
+                <!-- 界外線 -->
+                <line x1="150" y1="248" x2="280" y2="30" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+                <line x1="150" y1="248" x2="20" y2="30" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+            </svg>
+            <!-- 投手丘 -->
+            <div class="pitcher-mound"></div>
+            <!-- 壘包 -->
+            <div class="home-plate" id="home">
+                <div class="home-plate-shape"></div>
+            </div>
+            <div class="base" id="first-base"><div class="base-diamond"></div><span class="base-label">1B</span></div>
+            <div class="base" id="second-base"><div class="base-diamond"></div><span class="base-label">2B</span></div>
+            <div class="base" id="third-base"><div class="base-diamond"></div><span class="base-label">3B</span></div>
 
             <!-- 跑者 -->
-            <div class="runner" id="runner-home" style="display: none;"></div>
-            <div class="runner" id="runner-first" style="display: none;"></div>
-            <div class="runner" id="runner-second" style="display: none;"></div>
-            <div class="runner" id="runner-third" style="display: none;"></div>
+            <div class="runner" id="runner-home" style="display: none;"><span class="runner-icon">⚾</span></div>
+            <div class="runner" id="runner-first" style="display: none;"><span class="runner-icon">⚾</span></div>
+            <div class="runner" id="runner-second" style="display: none;"><span class="runner-icon">⚾</span></div>
+            <div class="runner" id="runner-third" style="display: none;"><span class="runner-icon">⚾</span></div>
+        </div>
 
-            <!-- 得分特效 -->
-            <div id="score-effect" class="score-effect" style="display: none;">
-                <span id="score-effect-text">恭喜得分!</span>
-            </div>
+        <!-- 得分特效 (放在 game-container 層級) -->
+        <div id="score-effect" class="score-effect" style="display: none;">
+            <span id="score-effect-text">恭喜得分!</span>
+        </div>
 
-            <!-- 攻守交換提示 -->
-            <div id="team-switch-effect" class="score-effect" style="display: none;">
-                <span id="team-switch-text">攻守交換!</span>
-            </div>
+        <!-- 攻守交換提示 -->
+        <div id="team-switch-effect" class="score-effect" style="display: none;">
+            <span id="team-switch-text">攻守交換!</span>
         </div>
 
         <!-- 題目區域 -->
@@ -147,5 +173,9 @@
     </div>
 
     <script src="script.js"></script>
+    <!-- tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.12.0/tsparticles.confetti.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <script src="particles-config.js"></script>
 </body>
 </html>
